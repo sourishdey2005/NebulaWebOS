@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { APPS, INITIAL_WALLPAPER, WALLPAPERS } from './constants';
-import { WindowState, SystemState, ContextMenuState, Notification } from './types';
+import { APPS, INITIAL_WALLPAPER, WALLPAPERS, DEFAULT_FS } from './constants';
+import { WindowState, SystemState, ContextMenuState, Notification, FileSystemNode } from './types';
 import { Desktop } from './components/Desktop';
 import { Taskbar } from './components/Taskbar';
 import { Window } from './components/Window';
@@ -11,6 +11,7 @@ import { CalendarWidget } from './components/system/CalendarWidget';
 import { ContextMenu } from './components/system/ContextMenu';
 import { NotificationCenter } from './components/system/NotificationCenter';
 import { ShieldCheck } from 'lucide-react';
+import { LockScreen } from './components/system/LockScreen';
 
 type ActivePanel = 'start' | 'control' | 'calendar' | 'notifications' | null;
 
@@ -21,7 +22,44 @@ function App() {
   const [maxZIndex, setMaxZIndex] = useState(10);
   const [wallpaper, setWallpaper] = useState(INITIAL_WALLPAPER);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLocked, setIsLocked] = useState(true);
   
+  // New State for Features
+  const [fs, setFs] = useState<FileSystemNode>(DEFAULT_FS);
+  const [installedAppIds, setInstalledAppIds] = useState<string[]>([
+    'files', 'store', 'terminal', 'monitor', 'assistant', 'music', 
+    'internet', 'calculator', 'notepad', 'settings', 'camera', 
+    'tictactoe', 'trash', 'taskmanager', 'clipboard', 
+    'paint', 'recorder', 'photo', 'video', 'markdown'
+  ]);
+
+  // Load FS from localStorage on mount
+  useEffect(() => {
+    const savedFs = localStorage.getItem('nebula-fs-v1');
+    if (savedFs) {
+        try {
+            setFs(JSON.parse(savedFs));
+        } catch(e) { console.error('FS Load Error', e); }
+    }
+    
+    // Load Installed Apps
+    const savedApps = localStorage.getItem('nebula-apps-v1');
+    if (savedApps) {
+        try {
+            setInstalledAppIds(JSON.parse(savedApps));
+        } catch(e) {}
+    }
+  }, []);
+
+  // Save FS and Apps when changed
+  useEffect(() => {
+    localStorage.setItem('nebula-fs-v1', JSON.stringify(fs));
+  }, [fs]);
+
+  useEffect(() => {
+    localStorage.setItem('nebula-apps-v1', JSON.stringify(installedAppIds));
+  }, [installedAppIds]);
+
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     isOpen: false,
     x: 0,
@@ -35,7 +73,7 @@ function App() {
     volume: 60,
     theme: 'dark',
     nightShift: false,
-    username: 'John Doe',
+    username: 'Guest User',
     powerMode: 'balanced',
     privacy: {
       location: true,
@@ -44,20 +82,23 @@ function App() {
     }
   });
 
-  // Startup Notification
+  // Startup Notification (only after unlock)
   useEffect(() => {
-    // Add a welcome notification after a short delay
-    const timer = setTimeout(() => {
-        addNotification({
-            title: 'Welcome to Nebula OS',
-            message: 'System initialization complete. All systems are running normally. Explore the AI features in Nebula Chat.',
-            source: 'System',
-            type: 'success'
-        });
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
+    if (!isLocked) {
+        // Add a welcome notification after a short delay
+        const timer = setTimeout(() => {
+            if (notifications.length === 0) {
+                addNotification({
+                    title: 'Welcome to Nebula OS',
+                    message: 'System initialization complete. All systems are running normally. Explore the AI features in Nebula Chat.',
+                    source: 'System',
+                    type: 'success'
+                });
+            }
+        }, 1500);
+        return () => clearTimeout(timer);
+    }
+  }, [isLocked]);
 
   const addNotification = (notif: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotif: Notification = {
@@ -70,6 +111,12 @@ function App() {
   };
 
   const handleOpenApp = (appId: string) => {
+    // Check if installed
+    if (!installedAppIds.includes(appId) && appId !== 'store') {
+        // If it's the Recycle Bin, we allow it even if technically not "installed" via store
+        if (appId !== 'trash') return;
+    }
+
     const app = APPS.find((a) => a.id === appId);
     if (!app) return;
 
@@ -97,15 +144,19 @@ function App() {
   };
 
   const handleCloseWindow = (id: string) => {
-    setWindows(windows.filter((w) => w.id !== id));
+    setWindows(prev => prev.filter((w) => w.id !== id));
     if (activeWindowId === id) {
-      const remaining = windows.filter((w) => w.id !== id);
-      if (remaining.length > 0) {
-        const nextTop = remaining.reduce((prev, current) => (prev.zIndex > current.zIndex ? prev : current));
-        setActiveWindowId(nextTop.id);
-      } else {
-        setActiveWindowId(null);
-      }
+      // Find new top window (highest zIndex)
+      setWindows(currentWindows => {
+        const remaining = currentWindows.filter((w) => w.id !== id);
+        if (remaining.length > 0) {
+           const nextTop = remaining.reduce((prev, current) => (prev.zIndex > current.zIndex ? prev : current));
+           setActiveWindowId(nextTop.id);
+        } else {
+           setActiveWindowId(null);
+        }
+        return remaining;
+      });
     }
   };
 
@@ -160,7 +211,12 @@ function App() {
     setWallpaper(WALLPAPERS[nextIndex]);
   };
 
+  // Filter apps for Desktop and Start Menu
+  const visibleApps = APPS.filter(app => installedAppIds.includes(app.id));
+
   return (
+    <>
+    {isLocked && <LockScreen username={systemState.username} onUnlock={() => setIsLocked(false)} />}
     <div 
       className="relative w-screen h-screen overflow-hidden bg-cover bg-center select-none text-sm transition-[background-image] duration-500 ease-in-out font-sans"
       style={{ backgroundImage: `url(${wallpaper})` }}
@@ -171,12 +227,12 @@ function App() {
 
       {/* Desktop Layer */}
       <div className="relative z-[10]">
-        <Desktop apps={APPS} onOpenApp={handleOpenApp} />
+        <Desktop apps={visibleApps} onOpenApp={handleOpenApp} />
       </div>
 
       {/* Floating Widgets Layer */}
       <div className="absolute right-4 top-20 z-[15] flex flex-col gap-4">
-         {/* Security Shield Widget matching screenshot */}
+         {/* Security Shield Widget */}
          <button 
             onClick={() => addNotification({ title: 'Security Scan Complete', message: 'No threats found. Your system is secure.', source: 'Security', type: 'success' })}
             className="w-12 h-12 rounded-full bg-blue-600/20 backdrop-blur-md border border-blue-500/30 flex items-center justify-center shadow-lg group cursor-pointer hover:bg-blue-600/30 transition-all active:scale-95"
@@ -191,16 +247,31 @@ function App() {
       {/* Windows Layer */}
       <div className="relative z-[20]">
         {windows.map((window) => {
-            // Inject props into specific apps that need system state
+            // Inject props into specific apps that need system state or FS
             let component = window.component;
             
             if (window.appId === 'settings') {
-            component = React.cloneElement(window.component as React.ReactElement<any>, {
-                onWallpaperChange: setWallpaper,
-                currentWallpaper: wallpaper,
-                systemState: systemState,
-                setSystemState: setSystemState
-            });
+                component = React.cloneElement(window.component as React.ReactElement<any>, {
+                    onWallpaperChange: setWallpaper,
+                    currentWallpaper: wallpaper,
+                    systemState: systemState,
+                    setSystemState: setSystemState
+                });
+            } else if (['terminal', 'files', 'trash', 'recorder'].includes(window.appId)) {
+                component = React.cloneElement(window.component as React.ReactElement<any>, {
+                    fs: fs,
+                    setFs: setFs
+                });
+            } else if (window.appId === 'taskmanager') {
+                component = React.cloneElement(window.component as React.ReactElement<any>, {
+                    windows: windows,
+                    onCloseWindow: handleCloseWindow
+                });
+            } else if (window.appId === 'store') {
+                component = React.cloneElement(window.component as React.ReactElement<any>, {
+                    installedApps: installedAppIds,
+                    setInstalledApps: setInstalledAppIds
+                });
             }
 
             return (
@@ -230,7 +301,7 @@ function App() {
         />
       </div>
 
-      {/* Taskbar - Direct Child to fix positioning */}
+      {/* Taskbar */}
       <Taskbar
         apps={APPS}
         openWindows={windows}
@@ -246,10 +317,10 @@ function App() {
         onFocusWindow={handleFocusWindow}
       />
 
-      {/* System Panels - Direct Children to fix positioning */}
+      {/* System Panels */}
       <StartMenu
         isOpen={activePanel === 'start'}
-        apps={APPS}
+        apps={visibleApps}
         onOpenApp={handleOpenApp}
         onClose={() => setActivePanel(null)}
         username={systemState.username}
@@ -275,6 +346,7 @@ function App() {
         onCloseNotification={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
       />
     </div>
+    </>
   );
 }
 

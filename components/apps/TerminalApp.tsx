@@ -1,11 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-
-interface FileSystemNode {
-  type: 'file' | 'dir';
-  content?: string;
-  children?: { [key: string]: FileSystemNode };
-}
+import { FileSystemNode } from '../../types';
 
 interface TerminalLine {
   type: 'input' | 'output' | 'error';
@@ -13,60 +8,20 @@ interface TerminalLine {
   path?: string;
 }
 
-const DEFAULT_FS: FileSystemNode = {
-  type: 'dir',
-  children: {
-    'home': {
-      type: 'dir',
-      children: {
-        'guest': {
-          type: 'dir',
-          children: {
-            'projects': { type: 'dir', children: {} },
-            'welcome.txt': { type: 'file', content: 'Welcome to Nebula OS Terminal!\nType "help" to see available commands.' },
-            'notes.txt': { type: 'file', content: 'TODO:\n- Explore the system\n- Try the AI assistant' }
-          }
-        }
-      }
-    },
-    'bin': {
-        type: 'dir',
-        children: {}
-    },
-    'etc': {
-        type: 'dir',
-        children: {}
-    }
-  }
-};
+interface TerminalAppProps {
+  fs?: FileSystemNode;
+  setFs?: React.Dispatch<React.SetStateAction<FileSystemNode>>;
+}
 
-export const TerminalApp: React.FC = () => {
+export const TerminalApp: React.FC<TerminalAppProps> = ({ fs, setFs }) => {
   const [history, setHistory] = useState<TerminalLine[]>([
     { type: 'output', content: 'Nebula OS Terminal [Version 1.2.0]' },
     { type: 'output', content: '(c) Nebula Corp. All rights reserved.\n' }
   ]);
   const [input, setInput] = useState('');
   const [cwd, setCwd] = useState<string[]>(['home', 'guest']);
-  const [fs, setFs] = useState<FileSystemNode>(DEFAULT_FS);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Load FS from localStorage
-  useEffect(() => {
-    const savedFs = localStorage.getItem('nebula-terminal-fs');
-    if (savedFs) {
-      try {
-        setFs(JSON.parse(savedFs));
-      } catch (e) {
-        console.error('Failed to parse saved FS', e);
-      }
-    }
-  }, []);
-
-  // Save FS to localStorage
-  useEffect(() => {
-    localStorage.setItem('nebula-terminal-fs', JSON.stringify(fs));
-  }, [fs]);
 
   // Auto-scroll
   useEffect(() => {
@@ -74,6 +29,8 @@ export const TerminalApp: React.FC = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [history]);
+
+  if (!fs || !setFs) return <div className="p-4 text-red-400 font-mono">Error: File System not mounted.</div>;
 
   const getCurrentNode = (currentFs: FileSystemNode, path: string[]): FileSystemNode | null => {
     let current = currentFs;

@@ -58,3 +58,9 @@ export interface Notification {
   source?: string; // e.g., 'System', 'Nebula AI', 'Security'
   type?: 'info' | 'success' | 'warning' | 'error';
 }
+
+export interface FileSystemNode {
+  type: 'file' | 'dir';
+  content?: string;
+  children?: { [key: string]: FileSystemNode };
+}
