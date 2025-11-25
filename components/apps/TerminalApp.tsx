@@ -1,0 +1,285 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+interface FileSystemNode {
+  type: 'file' | 'dir';
+  content?: string;
+  children?: { [key: string]: FileSystemNode };
+}
+
+interface TerminalLine {
+  type: 'input' | 'output' | 'error';
+  content: string;
+  path?: string;
+}
+
+const DEFAULT_FS: FileSystemNode = {
+  type: 'dir',
+  children: {
+    'home': {
+      type: 'dir',
+      children: {
+        'guest': {
+          type: 'dir',
+          children: {
+            'projects': { type: 'dir', children: {} },
+            'welcome.txt': { type: 'file', content: 'Welcome to Nebula OS Terminal!\nType "help" to see available commands.' },
+            'notes.txt': { type: 'file', content: 'TODO:\n- Explore the system\n- Try the AI assistant' }
+          }
+        }
+      }
+    },
+    'bin': {
+        type: 'dir',
+        children: {}
+    },
+    'etc': {
+        type: 'dir',
+        children: {}
+    }
+  }
+};
+
+export const TerminalApp: React.FC = () => {
+  const [history, setHistory] = useState<TerminalLine[]>([
+    { type: 'output', content: 'Nebula OS Terminal [Version 1.0.0]' },
+    { type: 'output', content: '(c) Nebula Corp. All rights reserved.\n' }
+  ]);
+  const [input, setInput] = useState('');
+  const [cwd, setCwd] = useState<string[]>(['home', 'guest']);
+  const [fs, setFs] = useState<FileSystemNode>(DEFAULT_FS);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load FS from localStorage
+  useEffect(() => {
+    const savedFs = localStorage.getItem('nebula-terminal-fs');
+    if (savedFs) {
+      try {
+        setFs(JSON.parse(savedFs));
+      } catch (e) {
+        console.error('Failed to parse saved FS', e);
+      }
+    }
+  }, []);
+
+  // Save FS to localStorage
+  useEffect(() => {
+    localStorage.setItem('nebula-terminal-fs', JSON.stringify(fs));
+  }, [fs]);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [history]);
+
+  const getCurrentNode = (currentFs: FileSystemNode, path: string[]): FileSystemNode | null => {
+    let current = currentFs;
+    for (const part of path) {
+      if (current.children && current.children[part]) {
+        current = current.children[part];
+      } else {
+        return null;
+      }
+    }
+    return current;
+  };
+
+  const handleCommand = (cmdStr: string) => {
+    const trimmed = cmdStr.trim();
+    if (!trimmed) {
+      setHistory(prev => [...prev, { type: 'input', content: '', path: formatPath(cwd) }]);
+      return;
+    }
+
+    const [cmd, ...args] = trimmed.split(/\s+/);
+    const newHistory: TerminalLine[] = [
+      ...history,
+      { type: 'input', content: cmdStr, path: formatPath(cwd) }
+    ];
+
+    switch (cmd) {
+      case 'help':
+        newHistory.push({ type: 'output', content: 
+`Available commands:
+  help              Show this help message
+  clear             Clear terminal screen
+  ls                List directory contents
+  cd [dir]          Change directory
+  pwd               Print working directory
+  echo [text]       Display a line of text
+  cat [file]        Read a file
+  touch [file]      Create a new file
+  mkdir [dir]       Create a directory
+  whoami            Print current user` 
+        });
+        break;
+
+      case 'clear':
+        setHistory([]);
+        setInput('');
+        return;
+
+      case 'pwd':
+        newHistory.push({ type: 'output', content: formatPath(cwd) });
+        break;
+
+      case 'whoami':
+        newHistory.push({ type: 'output', content: 'guest' });
+        break;
+
+      case 'echo':
+        newHistory.push({ type: 'output', content: args.join(' ') });
+        break;
+
+      case 'ls': {
+        const node = getCurrentNode(fs, cwd);
+        if (node && node.children) {
+          const items = Object.keys(node.children).map(name => {
+            const isDir = node.children![name].type === 'dir';
+            return isDir ? `${name}/` : name;
+          });
+          newHistory.push({ type: 'output', content: items.join('  ') });
+        } else {
+          newHistory.push({ type: 'error', content: 'Error: Cannot list contents.' });
+        }
+        break;
+      }
+
+      case 'cd': {
+        const target = args[0];
+        if (!target || target === '~') {
+          setCwd(['home', 'guest']);
+        } else if (target === '..') {
+          if (cwd.length > 0) {
+            setCwd(prev => prev.slice(0, -1));
+          }
+        } else if (target === '/') {
+          setCwd([]);
+        } else {
+          // Simple relative path support (one level)
+          const node = getCurrentNode(fs, cwd);
+          if (node && node.children && node.children[target] && node.children[target].type === 'dir') {
+             setCwd(prev => [...prev, target]);
+          } else {
+             newHistory.push({ type: 'error', content: `cd: ${target}: No such directory` });
+          }
+        }
+        break;
+      }
+
+      case 'cat': {
+        const filename = args[0];
+        if (!filename) {
+            newHistory.push({ type: 'error', content: 'usage: cat [file]' });
+            break;
+        }
+        const node = getCurrentNode(fs, cwd);
+        if (node && node.children && node.children[filename]) {
+             if (node.children[filename].type === 'file') {
+                 newHistory.push({ type: 'output', content: node.children[filename].content || '' });
+             } else {
+                 newHistory.push({ type: 'error', content: `cat: ${filename}: Is a directory` });
+             }
+        } else {
+            newHistory.push({ type: 'error', content: `cat: ${filename}: No such file` });
+        }
+        break;
+      }
+
+      case 'mkdir': {
+        const dirName = args[0];
+        if (!dirName) {
+            newHistory.push({ type: 'error', content: 'usage: mkdir [directory]' });
+            break;
+        }
+        // Clone FS
+        const newFs = JSON.parse(JSON.stringify(fs));
+        const currentNode = getCurrentNode(newFs, cwd);
+        if (currentNode && currentNode.children) {
+            if (currentNode.children[dirName]) {
+                newHistory.push({ type: 'error', content: `mkdir: cannot create directory '${dirName}': File exists` });
+            } else {
+                currentNode.children[dirName] = { type: 'dir', children: {} };
+                setFs(newFs);
+                newHistory.push({ type: 'output', content: `Directory created: ${dirName}` });
+            }
+        }
+        break;
+      }
+
+      case 'touch': {
+        const fileName = args[0];
+        if (!fileName) {
+            newHistory.push({ type: 'error', content: 'usage: touch [file]' });
+            break;
+        }
+        const newFs = JSON.parse(JSON.stringify(fs));
+        const currentNode = getCurrentNode(newFs, cwd);
+         if (currentNode && currentNode.children) {
+            if (currentNode.children[fileName]) {
+                 // Update timestamp effectively (no-op here for sim)
+            } else {
+                currentNode.children[fileName] = { type: 'file', content: '' };
+                setFs(newFs);
+            }
+         }
+        break;
+      }
+
+      default:
+        newHistory.push({ type: 'error', content: `command not found: ${cmd}` });
+    }
+
+    setHistory(newHistory);
+    setInput('');
+  };
+
+  const formatPath = (path: string[]) => {
+    if (path.length === 0) return '/';
+    const pathStr = '/' + path.join('/');
+    if (pathStr.startsWith('/home/guest')) {
+        return pathStr.replace('/home/guest', '~');
+    }
+    return pathStr;
+  };
+
+  return (
+    <div 
+      className="flex flex-col h-full bg-black text-gray-200 font-mono text-sm p-2 overflow-hidden"
+      onClick={() => inputRef.current?.focus()}
+    >
+      <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar" ref={scrollRef}>
+        {history.map((line, i) => (
+          <div key={i} className={`${line.type === 'error' ? 'text-red-400' : line.type === 'input' ? 'text-white' : 'text-green-400'} break-words whitespace-pre-wrap`}>
+            {line.type === 'input' && (
+                <span className="text-blue-400 mr-2">guest@nebula:{line.path}$</span>
+            )}
+            {line.content}
+          </div>
+        ))}
+        
+        {/* Active Input Line */}
+        <div className="flex items-center">
+             <span className="text-blue-400 mr-2 shrink-0">guest@nebula:{formatPath(cwd)}$</span>
+             <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        handleCommand(input);
+                    }
+                }}
+                className="flex-1 bg-transparent border-none outline-none text-white focus:ring-0 p-0 m-0"
+                autoFocus
+                autoComplete="off"
+                spellCheck={false}
+             />
+        </div>
+      </div>
+    </div>
+  );
+};

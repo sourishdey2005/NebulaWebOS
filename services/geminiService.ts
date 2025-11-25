@@ -13,7 +13,14 @@ export const streamGeminiResponse = async (
   history: { role: 'user' | 'model'; parts: { text: string }[] }[]
 ) => {
   // Safety check for API Key presence
-  const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) || '';
+  // We use a try-catch block to handle environments where accessing process might throw
+  let apiKey = '';
+  try {
+    apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) || '';
+  } catch (e) {
+    // Suppress error if process is undefined
+    console.warn("Could not access process.env");
+  }
 
   if (!apiKey) {
     // Return a mock response or throw a clear error if key is missing

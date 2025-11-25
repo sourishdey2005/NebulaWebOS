@@ -19,9 +19,18 @@ import { CalculatorApp } from './components/apps/CalculatorApp';
 import { SettingsApp } from './components/apps/SettingsApp';
 import { MusicPlayer } from './components/apps/MusicPlayer';
 import { BrowserApp } from './components/apps/BrowserApp';
+import { TerminalApp } from './components/apps/TerminalApp';
 
 // We define the registry of available apps here
 export const APPS: AppDefinition[] = [
+  {
+    id: 'terminal',
+    title: 'Terminal',
+    icon: Terminal,
+    component: <TerminalApp />,
+    defaultWidth: 700,
+    defaultHeight: 500,
+  },
   {
     id: 'assistant',
     title: 'Nebula AI',
