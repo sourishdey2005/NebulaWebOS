@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User, Monitor, Wifi, Battery, Shield, Check, Lock, MapPin, Camera, Mic, Signal, Smartphone, LogOut, KeyRound } from 'lucide-react';
+import { User, Monitor, Wifi, Battery, Shield, Check, Lock, MapPin, Camera, Mic, Signal, Smartphone, LogOut, KeyRound, Clock } from 'lucide-react';
 import { WALLPAPERS } from '../../constants';
 import { SystemState } from '../../types';
 
@@ -311,8 +311,26 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({
                             <div className="h-full bg-emerald-500 w-full" />
                          </div>
                     </div>
-                    <div className="bg-slate-800/50 p-6 rounded-xl border border-white/5">
-                        <h4 className="text-sm font-medium text-gray-300 mb-4">Power Mode</h4>
+                    <div className="bg-slate-800/50 p-6 rounded-xl border border-white/5 space-y-4">
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                                <Clock size={16} /> Screen Sleep
+                            </h4>
+                            <select
+                                value={systemState.sleepTimeout}
+                                onChange={(e) => updateState('sleepTimeout', parseInt(e.target.value))}
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500 transition-colors cursor-pointer appearance-none"
+                            >
+                                <option value={1}>1 Minute</option>
+                                <option value={5}>5 Minutes</option>
+                                <option value={15}>15 Minutes</option>
+                                <option value={30}>30 Minutes</option>
+                                <option value={60}>1 Hour</option>
+                                <option value={0}>Never</option>
+                            </select>
+                        </div>
+
+                        <h4 className="text-sm font-medium text-gray-300 mb-2 pt-2">Power Mode</h4>
                         <div className="space-y-2">
                             {[
                                 { id: 'performance', label: 'Best Performance' },

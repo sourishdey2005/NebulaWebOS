@@ -39,6 +39,7 @@ function App() {
     nightShift: false,
     username: 'Guest User',
     accentColor: '#3b82f6',
+    sleepTimeout: 5, // Default 5 minutes
     powerMode: 'balanced',
     privacy: { location: true, camera: true, microphone: true }
   });
@@ -60,7 +61,6 @@ function App() {
   // Screensaver State
   const [idleTime, setIdleTime] = useState(0);
   const [isScreenSaverActive, setIsScreenSaverActive] = useState(false);
-  const IDLE_THRESHOLD = 300; 
 
   // Dialogs
   const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
@@ -108,7 +108,13 @@ function App() {
   useEffect(() => {
     const timer = setInterval(() => {
         setIdleTime(prev => {
-            if (prev >= IDLE_THRESHOLD && !isScreenSaverActive && !isLocked) setIsScreenSaverActive(true);
+            // Convert configured minutes to seconds
+            const thresholdSeconds = (systemState.sleepTimeout || 5) * 60;
+            
+            // Only activate if sleepTimeout is not 0 (Never)
+            if (systemState.sleepTimeout > 0 && prev >= thresholdSeconds && !isScreenSaverActive && !isLocked) {
+                setIsScreenSaverActive(true);
+            }
             return prev + 1;
         });
     }, 1000);
@@ -128,7 +134,7 @@ function App() {
         window.removeEventListener('keydown', resetIdle);
         window.removeEventListener('click', resetIdle);
     };
-  }, [isScreenSaverActive, isLocked]);
+  }, [isScreenSaverActive, isLocked, systemState.sleepTimeout]);
 
   // Keyboard Shortcuts (Run, Spotlight)
   useEffect(() => {

@@ -39,6 +39,7 @@ export interface SystemState {
   password?: string;
   walletAddress?: string; // Added for Blockchain Integration
   accentColor: string;
+  sleepTimeout: number; // in minutes, 0 for never
   powerMode: 'balanced' | 'performance' | 'saver';
   privacy: {
     location: boolean;
