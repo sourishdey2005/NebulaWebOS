@@ -21,7 +21,16 @@ import {
   Palette,
   Mic,
   Video,
-  Edit3
+  Edit3,
+  Layout,
+  Grid,
+  FileCode,
+  StickyNote,
+  Clock,
+  Code,
+  Pipette,
+  Braces,
+  Regex
 } from 'lucide-react';
 import { GeminiChat } from './components/apps/GeminiChat';
 import { Notepad } from './components/apps/Notepad';
@@ -42,6 +51,15 @@ import { VoiceRecorderApp } from './components/apps/VoiceRecorderApp';
 import { PhotoEditorApp } from './components/apps/PhotoEditorApp';
 import { VideoPlayerApp } from './components/apps/VideoPlayerApp';
 import { MarkdownEditorApp } from './components/apps/MarkdownEditorApp';
+import { KanbanApp } from './components/apps/KanbanApp';
+import { SpreadsheetApp } from './components/apps/SpreadsheetApp';
+import { PDFViewerApp } from './components/apps/PDFViewerApp';
+import { StickyNotesApp } from './components/apps/StickyNotesApp';
+import { ClockApp } from './components/apps/ClockApp';
+import { CodeEditorApp } from './components/apps/CodeEditorApp';
+import { ColorPickerApp } from './components/apps/ColorPickerApp';
+import { JsonFormatterApp } from './components/apps/JsonFormatterApp';
+import { RegexTesterApp } from './components/apps/RegexTesterApp';
 
 export const WALLPAPERS = [
   "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop", // Space
@@ -142,7 +160,83 @@ export const APPS: AppDefinition[] = [
     defaultHeight: 500,
   },
   
-  // Column 2 - Productivity & Media
+  // Column 2 - Productivity
+  {
+    id: 'kanban',
+    title: 'Nebula Tasks',
+    icon: Layout,
+    component: <KanbanApp />,
+    defaultWidth: 900,
+    defaultHeight: 600,
+  },
+  {
+    id: 'spreadsheet',
+    title: 'Sheets Lite',
+    icon: Grid,
+    component: <SpreadsheetApp />,
+    defaultWidth: 1000,
+    defaultHeight: 700,
+  },
+  {
+    id: 'pdf',
+    title: 'PDF Viewer',
+    icon: FileText,
+    component: <PDFViewerApp />,
+    defaultWidth: 800,
+    defaultHeight: 700,
+  },
+  {
+    id: 'stickynotes',
+    title: 'Sticky Notes',
+    icon: StickyNote,
+    component: <StickyNotesApp />,
+    defaultWidth: 350,
+    defaultHeight: 400,
+  },
+  {
+    id: 'clock',
+    title: 'Clock',
+    icon: Clock,
+    component: <ClockApp />,
+    defaultWidth: 600,
+    defaultHeight: 400,
+  },
+  
+  // Column 3 - Developer Tools
+  {
+    id: 'code',
+    title: 'Code Studio',
+    icon: Code,
+    component: <CodeEditorApp />,
+    defaultWidth: 900,
+    defaultHeight: 650,
+  },
+  {
+    id: 'colorpicker',
+    title: 'Color Picker',
+    icon: Pipette,
+    component: <ColorPickerApp />,
+    defaultWidth: 500,
+    defaultHeight: 400,
+  },
+  {
+    id: 'json',
+    title: 'JSON Formatter',
+    icon: Braces,
+    component: <JsonFormatterApp />,
+    defaultWidth: 800,
+    defaultHeight: 600,
+  },
+  {
+    id: 'regex',
+    title: 'Regex Tester',
+    icon: Regex, // Fallback icon if Regex not in lucide (it is usually FileCode or generic)
+    component: <RegexTesterApp />,
+    defaultWidth: 600,
+    defaultHeight: 500,
+  },
+
+  // Column 4 - Legacy & Media
   {
     id: 'assistant',
     title: 'Nebula AI',
@@ -175,8 +269,6 @@ export const APPS: AppDefinition[] = [
     defaultWidth: 320,
     defaultHeight: 480,
   },
-  
-  // Column 3 - Creative
   {
     id: 'paint',
     title: 'Paint',
@@ -201,8 +293,6 @@ export const APPS: AppDefinition[] = [
     defaultWidth: 800,
     defaultHeight: 600,
   },
-  
-  // Column 4 - Entertainment & Internet
   {
     id: 'internet',
     title: 'Internet',

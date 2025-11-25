@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { APPS, INITIAL_WALLPAPER, WALLPAPERS, DEFAULT_FS } from './constants';
-import { WindowState, SystemState, ContextMenuState, Notification, FileSystemNode } from './types';
+import { WindowState, SystemState, ContextMenuState, Notification, FileSystemNode, StickyNote } from './types';
 import { Desktop } from './components/Desktop';
 import { Taskbar } from './components/Taskbar';
 import { Window } from './components/Window';
@@ -30,8 +30,11 @@ function App() {
     'files', 'store', 'terminal', 'monitor', 'assistant', 'music', 
     'internet', 'calculator', 'notepad', 'settings', 'camera', 
     'tictactoe', 'trash', 'taskmanager', 'clipboard', 
-    'paint', 'recorder', 'photo', 'video', 'markdown'
+    'paint', 'recorder', 'photo', 'video', 'markdown',
+    'kanban', 'spreadsheet', 'pdf', 'stickynotes', 'clock',
+    'code', 'colorpicker', 'json', 'regex'
   ]);
+  const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]);
 
   // Load FS from localStorage on mount
   useEffect(() => {
@@ -49,6 +52,14 @@ function App() {
             setInstalledAppIds(JSON.parse(savedApps));
         } catch(e) {}
     }
+
+    // Load Sticky Notes
+    const savedNotes = localStorage.getItem('nebula-notes-v1');
+    if (savedNotes) {
+        try {
+            setStickyNotes(JSON.parse(savedNotes));
+        } catch(e) {}
+    }
   }, []);
 
   // Save FS and Apps when changed
@@ -59,6 +70,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('nebula-apps-v1', JSON.stringify(installedAppIds));
   }, [installedAppIds]);
+
+  useEffect(() => {
+    localStorage.setItem('nebula-notes-v1', JSON.stringify(stickyNotes));
+  }, [stickyNotes]);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     isOpen: false,
@@ -227,7 +242,12 @@ function App() {
 
       {/* Desktop Layer */}
       <div className="relative z-[10]">
-        <Desktop apps={visibleApps} onOpenApp={handleOpenApp} />
+        <Desktop 
+            apps={visibleApps} 
+            onOpenApp={handleOpenApp} 
+            stickyNotes={stickyNotes} 
+            setStickyNotes={setStickyNotes}
+        />
       </div>
 
       {/* Floating Widgets Layer */}
@@ -271,6 +291,11 @@ function App() {
                 component = React.cloneElement(window.component as React.ReactElement<any>, {
                     installedApps: installedAppIds,
                     setInstalledApps: setInstalledAppIds
+                });
+            } else if (window.appId === 'stickynotes') {
+                component = React.cloneElement(window.component as React.ReactElement<any>, {
+                    stickyNotes: stickyNotes,
+                    setStickyNotes: setStickyNotes
                 });
             }
 

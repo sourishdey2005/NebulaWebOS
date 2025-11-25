@@ -64,3 +64,11 @@ export interface FileSystemNode {
   content?: string;
   children?: { [key: string]: FileSystemNode };
 }
+
+export interface StickyNote {
+  id: string;
+  text: string;
+  color: string;
+  x: number;
+  y: number;
+}
