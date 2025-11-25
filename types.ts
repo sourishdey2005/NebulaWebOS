@@ -33,10 +33,28 @@ export interface SystemState {
   brightness: number;
   volume: number;
   theme: Theme;
+  nightShift: boolean;
+  username: string;
+  powerMode: 'balanced' | 'performance' | 'saver';
+  privacy: {
+    location: boolean;
+    camera: boolean;
+    microphone: boolean;
+  };
 }
 
 export interface ContextMenuState {
   isOpen: boolean;
   x: number;
   y: number;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  source?: string; // e.g., 'System', 'Nebula AI', 'Security'
+  type?: 'info' | 'success' | 'warning' | 'error';
 }

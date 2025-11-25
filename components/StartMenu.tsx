@@ -1,16 +1,18 @@
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppDefinition } from '../types';
-import { Power, User, Search, ChevronRight } from 'lucide-react';
+import { Power, Search, ChevronRight } from 'lucide-react';
 
 interface StartMenuProps {
   isOpen: boolean;
   apps: AppDefinition[];
   onOpenApp: (appId: string) => void;
   onClose: () => void;
+  username: string;
 }
 
-export const StartMenu: React.FC<StartMenuProps> = ({ isOpen, apps, onOpenApp, onClose }) => {
+export const StartMenu: React.FC<StartMenuProps> = ({ isOpen, apps, onOpenApp, onClose, username }) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -88,10 +90,10 @@ export const StartMenu: React.FC<StartMenuProps> = ({ isOpen, apps, onOpenApp, o
             <div className="h-14 bg-black/20 border-t border-white/5 flex items-center justify-between px-4">
               <button className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors text-left">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs border border-white/20">
-                    JD
+                    {username.substring(0, 2).toUpperCase()}
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-xs font-medium text-gray-200">John Doe</span>
+                    <span className="text-xs font-medium text-gray-200">{username}</span>
                     <span className="text-[10px] text-gray-400">Admin</span>
                 </div>
               </button>

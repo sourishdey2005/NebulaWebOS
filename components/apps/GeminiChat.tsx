@@ -36,23 +36,22 @@ export const GeminiChat: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
-    // Prepare history for API
-    // We must NOT include the new userMsg in history, as sendMessageStream sends it.
-    // We also filter out error messages to keep the context clean.
-    const history = messages
-      .filter(m => !m.isError)
-      .map(m => ({
-        role: m.role,
-        parts: [{ text: m.text }]
-      }));
-
     try {
-      const streamResult = await streamGeminiResponse(userMsg.text, history);
-      
-      // Create a placeholder message for the stream
+      // Create a placeholder message for the stream immediately
       const responseId = (Date.now() + 1).toString();
       setMessages(prev => [...prev, { id: responseId, role: 'model', text: '' }]);
 
+      // Prepare history for API
+      // Crucial: Filter out empty messages and error messages to prevent API "InvalidArgument" errors
+      const history = messages
+        .filter(m => !m.isError && m.text.trim().length > 0)
+        .map(m => ({
+          role: m.role,
+          parts: [{ text: m.text }]
+        }));
+
+      const streamResult = await streamGeminiResponse(userMsg.text, history);
+      
       let fullText = '';
       for await (const chunk of streamResult) {
         const c = chunk as GenerateContentResponse;
@@ -64,10 +63,20 @@ export const GeminiChat: React.FC = () => {
         ));
       }
     } catch (error) {
+      console.error("Gemini Chat Error:", error);
+      // Remove the empty loading message if it exists (the last one)
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last.role === 'model' && last.text === '') {
+            return prev.slice(0, -1);
+        }
+        return prev;
+      });
+
       setMessages(prev => [...prev, { 
         id: Date.now().toString(), 
         role: 'model', 
-        text: 'Sorry, I encountered an error connecting to the Nebula Network. Please check your network connection or API key configuration.', 
+        text: 'Sorry, I encountered an error connecting to the Nebula Network. Please check your network connection and ensure `API_KEY` is set correctly in your environment.', 
         isError: true 
       }]);
     } finally {
@@ -80,43 +89,48 @@ export const GeminiChat: React.FC = () => {
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" ref={scrollRef}>
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.role === 'model' && (
-              <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-1">
-                <Bot size={16} className="text-indigo-400" />
-              </div>
-            )}
-            
-            <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed ${
-              msg.role === 'user' 
-                ? 'bg-blue-600 text-white rounded-tr-none' 
-                : 'bg-slate-800/80 text-gray-200 rounded-tl-none border border-white/5'
-            } ${msg.isError ? 'bg-red-900/50 border-red-500/30 text-red-200' : ''}`}>
-              <ReactMarkdown 
-                className="prose prose-invert prose-sm max-w-none"
-                components={{
-                    code({node, className, children, ...props}) {
-                        return (
-                            <code className={`${className} bg-black/30 rounded px-1 py-0.5 text-xs font-mono text-yellow-300`} {...props}>
-                                {children}
-                            </code>
-                        )
-                    }
-                }}
-              >
-                {msg.text}
-              </ReactMarkdown>
-            </div>
+          // Hide empty messages (while loading/thinking) unless they are the active stream
+          (msg.text || isLoading) && (
+            <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {msg.role === 'model' && (
+                <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-1">
+                    <Bot size={16} className="text-indigo-400" />
+                </div>
+                )}
+                
+                {msg.text && (
+                    <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed ${
+                    msg.role === 'user' 
+                        ? 'bg-blue-600 text-white rounded-tr-none' 
+                        : 'bg-slate-800/80 text-gray-200 rounded-tl-none border border-white/5'
+                    } ${msg.isError ? 'bg-red-900/50 border-red-500/30 text-red-200' : ''}`}>
+                    <ReactMarkdown 
+                        className="prose prose-invert prose-sm max-w-none"
+                        components={{
+                            code({node, className, children, ...props}) {
+                                return (
+                                    <code className={`${className} bg-black/30 rounded px-1 py-0.5 text-xs font-mono text-yellow-300`} {...props}>
+                                        {children}
+                                    </code>
+                                )
+                            }
+                        }}
+                    >
+                        {msg.text}
+                    </ReactMarkdown>
+                    </div>
+                )}
 
-            {msg.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0 mt-1">
-                <User size={16} className="text-gray-300" />
-              </div>
-            )}
-          </div>
+                {msg.role === 'user' && (
+                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0 mt-1">
+                    <User size={16} className="text-gray-300" />
+                </div>
+                )}
+            </div>
+          )
         ))}
-        {isLoading && (
-            <div className="flex gap-3 justify-start">
+        {isLoading && messages[messages.length - 1]?.text === '' && (
+            <div className="flex gap-3 justify-start animate-pulse">
                 <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
                     <Bot size={16} className="text-indigo-400" />
                 </div>

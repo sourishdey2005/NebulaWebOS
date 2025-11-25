@@ -10,7 +10,7 @@ const getAiClient = () => {
   const apiKey = getGeminiApiKey();
   
   if (!apiKey) {
-    throw new Error("API Key not found. Please ensure API_KEY or GEMINI_API_KEY is set in your environment variables.");
+    throw new Error("API Key not found. Please ensure API_KEY is set in your environment variables.");
   }
 
   aiClient = new GoogleGenAI({ apiKey });
