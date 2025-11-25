@@ -1,20 +1,28 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
-// Initialize the client once. 
-// Note: In a real production app, you might want to handle this more dynamically, 
-// but for this demo, we assume the env var is present.
-const apiKey = process.env.API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+let aiClient: GoogleGenAI | null = null;
+
+const getAiClient = (apiKey: string) => {
+  if (aiClient) return aiClient;
+  aiClient = new GoogleGenAI({ apiKey });
+  return aiClient;
+};
 
 export const streamGeminiResponse = async (
   prompt: string,
   history: { role: 'user' | 'model'; parts: { text: string }[] }[]
 ) => {
+  // Safety check for API Key presence
+  const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) || '';
+
   if (!apiKey) {
+    // Return a mock response or throw a clear error if key is missing
+    // For the UI to handle it gracefully without crashing, we'll throw.
     throw new Error("API Key not found. Please check your configuration.");
   }
 
   try {
+    const ai = getAiClient(apiKey);
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash',
       config: {

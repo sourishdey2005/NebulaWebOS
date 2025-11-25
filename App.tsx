@@ -88,6 +88,14 @@ function App() {
     setActiveWindowId(id);
   };
 
+  const handleMoveWindow = (id: string, x: number, y: number) => {
+    setWindows(prev => prev.map(w => w.id === id ? { ...w, position: { x, y } } : w));
+  };
+
+  const handleResizeWindow = (id: string, size: { width: number; height: number }, position?: { x: number; y: number }) => {
+    setWindows(prev => prev.map(w => w.id === id ? { ...w, size, position: position || w.position } : w));
+  };
+
   const togglePanel = (panel: ActivePanel) => {
     setActivePanel(current => current === panel ? null : panel);
   };
@@ -110,6 +118,8 @@ function App() {
           onMinimize={handleMinimizeWindow}
           onMaximize={handleMaximizeWindow}
           onFocus={handleFocusWindow}
+          onMove={handleMoveWindow}
+          onResize={handleResizeWindow}
         />
       ))}
 

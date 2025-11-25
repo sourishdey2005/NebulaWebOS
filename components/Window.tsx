@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useDragControls } from 'framer-motion';
 import { X, Minus, Square, Maximize2 } from 'lucide-react';
 import { WindowState } from '../types';
@@ -10,6 +10,8 @@ interface WindowProps {
   onMinimize: (id: string) => void;
   onMaximize: (id: string) => void;
   onFocus: (id: string) => void;
+  onMove: (id: string, x: number, y: number) => void;
+  onResize: (id: string, size: { width: number; height: number }, position?: { x: number; y: number }) => void;
 }
 
 export const Window: React.FC<WindowProps> = ({
@@ -19,18 +21,68 @@ export const Window: React.FC<WindowProps> = ({
   onMinimize,
   onMaximize,
   onFocus,
+  onMove,
+  onResize
 }) => {
   const dragControls = useDragControls();
-  const constraintsRef = useRef(null);
+  const [isResizing, setIsResizing] = useState(false);
 
-  // If minimized, don't render (or render hidden if we wanted animation from taskbar, but simple unmount/hidden is fine for now)
+  // If minimized, don't render
   if (windowState.isMinimized) {
     return null;
   }
 
+  const handleResizeStart = (e: React.PointerEvent, direction: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onFocus(windowState.id);
+    setIsResizing(true);
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = windowState.size.width;
+    const startHeight = windowState.size.height;
+    const startPosX = windowState.position.x;
+    const startPosY = windowState.position.y;
+
+    const onPointerMove = (moveEvent: PointerEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+      let newX = startPosX;
+      let newY = startPosY;
+
+      if (direction.includes('e')) newWidth = Math.max(300, startWidth + deltaX);
+      if (direction.includes('w')) {
+        const w = Math.max(300, startWidth - deltaX);
+        newWidth = w;
+        newX = startPosX + (startWidth - w);
+      }
+      if (direction.includes('s')) newHeight = Math.max(200, startHeight + deltaY);
+      if (direction.includes('n')) {
+        const h = Math.max(200, startHeight - deltaY);
+        newHeight = h;
+        newY = startPosY + (startHeight - h);
+      }
+
+      onResize(windowState.id, { width: newWidth, height: newHeight }, { x: newX, y: newY });
+    };
+
+    const onPointerUp = () => {
+      setIsResizing(false);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
+
   return (
     <motion.div
-      drag={!windowState.isMaximized}
+      drag={!windowState.isMaximized && !isResizing}
       dragControls={dragControls}
       dragListener={false}
       dragMomentum={false}
@@ -44,8 +96,14 @@ export const Window: React.FC<WindowProps> = ({
         y: windowState.isMaximized ? 0 : windowState.position.y,
         borderRadius: windowState.isMaximized ? 0 : '12px',
       }}
+      transition={{ duration: 0 }} // Instant update for resize/drag
       exit={{ scale: 0.9, opacity: 0 }}
       onPointerDown={() => onFocus(windowState.id)}
+      onDragEnd={(_e, info) => {
+        if (!windowState.isMaximized) {
+          onMove(windowState.id, windowState.position.x + info.offset.x, windowState.position.y + info.offset.y);
+        }
+      }}
       style={{
         zIndex: windowState.zIndex,
         position: 'absolute',
@@ -56,11 +114,30 @@ export const Window: React.FC<WindowProps> = ({
         isActive ? 'shadow-blue-500/20 border-white/20' : ''
       }`}
     >
+      {/* Resize Handles - Only when not maximized */}
+      {!windowState.isMaximized && (
+        <>
+            {/* Corners */}
+            <div className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-50" onPointerDown={(e) => handleResizeStart(e, 'nw')} />
+            <div className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize z-50" onPointerDown={(e) => handleResizeStart(e, 'ne')} />
+            <div className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize z-50" onPointerDown={(e) => handleResizeStart(e, 'sw')} />
+            <div className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-50" onPointerDown={(e) => handleResizeStart(e, 'se')} />
+            
+            {/* Edges */}
+            <div className="absolute top-0 left-4 right-4 h-2 cursor-n-resize z-40" onPointerDown={(e) => handleResizeStart(e, 'n')} />
+            <div className="absolute bottom-0 left-4 right-4 h-2 cursor-s-resize z-40" onPointerDown={(e) => handleResizeStart(e, 's')} />
+            <div className="absolute left-0 top-4 bottom-4 w-2 cursor-w-resize z-40" onPointerDown={(e) => handleResizeStart(e, 'w')} />
+            <div className="absolute right-0 top-4 bottom-4 w-2 cursor-e-resize z-40" onPointerDown={(e) => handleResizeStart(e, 'e')} />
+        </>
+      )}
+
       {/* Title Bar */}
       <div
-        className="h-10 flex items-center justify-between px-3 bg-white/5 select-none"
+        className="h-10 flex items-center justify-between px-3 bg-white/5 select-none shrink-0"
         onPointerDown={(e) => {
-          dragControls.start(e);
+          if (!windowState.isMaximized) {
+            dragControls.start(e);
+          }
           onFocus(windowState.id);
         }}
         onDoubleClick={() => onMaximize(windowState.id)}
@@ -92,11 +169,11 @@ export const Window: React.FC<WindowProps> = ({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden flex flex-col">
         {windowState.component}
         
-        {/* Interaction overlay to prevent iframe stealing clicks when window not active (if we used iframes) */}
-        {!isActive && <div className="absolute inset-0 bg-transparent" />}
+        {/* Interaction overlay to prevent iframe stealing clicks when moving/resizing or inactive */}
+        {(!isActive || isResizing) && <div className="absolute inset-0 bg-transparent z-40" />}
       </div>
     </motion.div>
   );

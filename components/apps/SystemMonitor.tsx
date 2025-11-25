@@ -95,7 +95,7 @@ export const SystemMonitor: React.FC = () => {
             <div className="space-y-4">
                 <div>
                     <div className="flex justify-between text-xs text-gray-400 mb-1">
-                        <span>Macintosh HD</span>
+                        <span>Nebula Disk (C:)</span>
                         <span>450 GB / 1 TB</span>
                     </div>
                     <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
