@@ -63,7 +63,7 @@ export const Taskbar: React.FC<TaskbarProps> = ({
     <div className="absolute bottom-0 left-0 right-0 h-14 bg-[#0f172a]/95 backdrop-blur-xl border-t border-white/5 flex items-center justify-between px-4 z-50 shadow-[0_-1px_0_rgba(255,255,255,0.05)]">
       
       {/* Left Group: Start & Search */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 z-20">
         <button
           onClick={onToggleStartMenu}
           className={`p-2 rounded-lg transition-all duration-200 group ${isStartMenuOpen ? 'bg-blue-600/20 text-blue-400' : 'hover:bg-white/5 text-slate-300 hover:text-white'}`}
@@ -81,34 +81,8 @@ export const Taskbar: React.FC<TaskbarProps> = ({
         </div>
       </div>
 
-      {/* Right Group: System Tray, Clock, Apps */}
-      <div className="flex items-center gap-6">
-        
-        {/* System Tray: Wifi, Volume, Monitor (to match screenshot visual) */}
-        <button 
-          onClick={onToggleControlCenter}
-          className="hidden sm:flex items-center gap-4 px-3 py-2 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors cursor-default"
-        >
-          <Wifi size={18} className="text-slate-300" />
-          <Volume2 size={18} className="text-slate-300" />
-          <Monitor size={18} className="text-slate-300" />
-        </button>
-        
-        {/* Clock */}
-        <button 
-          onClick={onToggleCalendar}
-          className="flex flex-col items-end justify-center px-3 py-1 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors cursor-default min-w-[90px]"
-        >
-          <span className="text-sm font-semibold text-slate-200 leading-tight">
-            {format(currentTime, 'h:mm aa')}
-          </span>
-          <span className="text-[11px] text-slate-400 font-medium leading-tight">
-            {format(currentTime, 'MMM d, yyyy')}
-          </span>
-        </button>
-
-        {/* App Dock (Right Side) - No Divider, No Bell */}
-        <div className="flex items-center gap-3 pl-2">
+      {/* Center Group: App Dock - Centered Absolutely */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 z-10">
           {pinnedApps.map((app) => {
             const isOpen = openWindows.some(w => w.appId === app.id);
             const isActive = openWindows.some(w => w.appId === app.id && w.id === activeWindowId && !w.isMinimized);
@@ -118,18 +92,18 @@ export const Taskbar: React.FC<TaskbarProps> = ({
                 key={app.id}
                 onClick={() => handleAppClick(app.id)}
                 className={`
-                  group relative p-2 rounded-lg transition-all duration-300
-                  ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}
+                  group relative p-2.5 rounded-lg transition-all duration-300
+                  ${isActive ? 'bg-white/10 shadow-inner' : 'hover:bg-white/5'}
                 `}
               >
                 <app.icon 
-                  size={24} 
-                  className={`transition-all duration-300 drop-shadow-lg ${isActive ? 'text-blue-400' : 'text-slate-300 group-hover:text-white'}`} 
+                  size={26} 
+                  className={`transition-all duration-300 drop-shadow-md ${isActive ? 'text-blue-400 scale-110' : 'text-slate-300 group-hover:text-white group-hover:scale-110'}`} 
                 />
                 
                 {/* Active Indicator */}
                 {isOpen && (
-                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500" />
+                   <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full transition-colors ${isActive ? 'bg-blue-400' : 'bg-slate-500'}`} />
                 )}
                 
                 {/* Tooltip */}
@@ -139,7 +113,33 @@ export const Taskbar: React.FC<TaskbarProps> = ({
               </button>
             );
           })}
-        </div>
+      </div>
+
+      {/* Right Group: System Tray, Clock */}
+      <div className="flex items-center gap-4 z-20">
+        
+        {/* System Tray: Wifi, Volume, Monitor */}
+        <button 
+          onClick={onToggleControlCenter}
+          className="hidden sm:flex items-center gap-4 px-3 py-2 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors cursor-default border border-transparent hover:border-white/5"
+        >
+          <Wifi size={18} className="text-slate-300" />
+          <Volume2 size={18} className="text-slate-300" />
+          <Monitor size={18} className="text-slate-300" />
+        </button>
+        
+        {/* Clock */}
+        <button 
+          onClick={onToggleCalendar}
+          className="flex flex-col items-end justify-center px-3 py-1 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors cursor-default min-w-[90px] border border-transparent hover:border-white/5"
+        >
+          <span className="text-sm font-semibold text-slate-200 leading-tight">
+            {format(currentTime, 'h:mm aa')}
+          </span>
+          <span className="text-[11px] text-slate-400 font-medium leading-tight">
+            {format(currentTime, 'MMM d, yyyy')}
+          </span>
+        </button>
       </div>
     </div>
   );
