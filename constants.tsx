@@ -2,52 +2,14 @@
 import React from 'react';
 import { AppDefinition, FileSystemNode } from './types';
 import { 
-  Terminal, 
-  FileText, 
-  Settings, 
-  Calculator, 
-  Activity, 
-  Image as ImageIcon,
-  MessageSquare,
-  Music,
-  Globe,
-  Camera,
-  Gamepad2,
-  Folder,
-  Trash2,
-  ShoppingBag,
-  ClipboardList,
-  Cpu,
-  Palette,
-  Mic,
-  Video,
-  Edit3,
-  Layout,
-  Grid,
-  FileCode,
-  StickyNote,
-  Clock,
-  Code,
-  Pipette,
-  Braces,
-  Regex,
-  CloudSun,
-  Timer,
-  Bomb,
-  TableProperties,
-  ArrowRightLeft,
-  Key,
-  QrCode,
-  Ghost,
-  Hash,
-  Keyboard,
-  Speech,
-  Coins,
-  FlaskConical,
-  PenTool,
-  GitCompare,
-  Zap
+  Terminal, FileText, Settings, Calculator, Activity, Image as ImageIcon,
+  MessageSquare, Music, Globe, Camera, Gamepad2, Folder, Trash2, ShoppingBag,
+  ClipboardList, Cpu, Palette, Mic, Video, Edit3, Layout, Grid, FileCode,
+  StickyNote, Clock, Code, Pipette, Braces, Regex, CloudSun, Timer, Bomb,
+  TableProperties, ArrowRightLeft, Key, QrCode, Ghost, Hash, Keyboard, Speech,
+  Coins, FlaskConical, PenTool, GitCompare, Mail, Map, HardDrive, Phone
 } from 'lucide-react';
+
 import { GeminiChat } from './components/apps/GeminiChat';
 import { Notepad } from './components/apps/Notepad';
 import { SystemMonitor } from './components/apps/SystemMonitor';
@@ -91,13 +53,18 @@ import { CurrencyApp } from './components/apps/CurrencyApp';
 import { PeriodicTableApp } from './components/apps/PeriodicTableApp';
 import { WhiteboardApp } from './components/apps/WhiteboardApp';
 import { DiffCheckerApp } from './components/apps/DiffCheckerApp';
+// New Apps
+import { MailApp } from './components/apps/productivity/MailApp';
+import { MapsApp } from './components/apps/internet/MapsApp';
+import { DiskUtilityApp } from './components/apps/utilities/DiskUtilityApp';
+import { MeetingApp } from './components/apps/media/MeetingApp';
 
 export const WALLPAPERS = [
-  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop", // Space
-  "https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop", // Mountains
-  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop", // Cyberpunk
-  "https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=2155&auto=format&fit=crop", // Aurora
-  "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2072&auto=format&fit=crop", // Ocean
+  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop", 
+  "https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop", 
+  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop", 
+  "https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=2155&auto=format&fit=crop", 
+  "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2072&auto=format&fit=crop", 
 ];
 
 export const DEFAULT_FS: FileSystemNode = {
@@ -124,384 +91,76 @@ export const DEFAULT_FS: FileSystemNode = {
         }
       }
     },
-    'trash': {
-        type: 'dir',
-        children: {}
-    },
-    'bin': {
-        type: 'dir',
-        children: {}
-    },
-    'etc': {
-        type: 'dir',
-        children: {}
-    }
+    'trash': { type: 'dir', children: {} },
+    'bin': { type: 'dir', children: {} },
+    'etc': { type: 'dir', children: {} }
   }
 };
 
-// Registry of available apps
 export const APPS: AppDefinition[] = [
-  // Column 1 - System & Utilities
-  {
-    id: 'files',
-    title: 'File Explorer',
-    icon: Folder,
-    component: <FileExplorerApp />,
-    defaultWidth: 800,
-    defaultHeight: 550,
-  },
-  {
-    id: 'store',
-    title: 'App Store',
-    icon: ShoppingBag,
-    component: <AppStoreApp />,
-    defaultWidth: 900,
-    defaultHeight: 650,
-  },
-  {
-    id: 'taskmanager',
-    title: 'Task Manager',
-    icon: Cpu,
-    component: <TaskManagerApp />,
-    defaultWidth: 500,
-    defaultHeight: 600,
-  },
-  {
-    id: 'clipboard',
-    title: 'Clipboard',
-    icon: ClipboardList,
-    component: <ClipboardManagerApp />,
-    defaultWidth: 350,
-    defaultHeight: 500,
-  },
-  {
-    id: 'terminal',
-    title: 'Terminal',
-    icon: Terminal,
-    component: <TerminalApp />,
-    defaultWidth: 700,
-    defaultHeight: 500,
-  },
-  {
-    id: 'settings',
-    title: 'Settings',
-    icon: Settings,
-    component: <SettingsApp />,
-    defaultWidth: 600,
-    defaultHeight: 500,
-  },
-  
-  // Column 2 - Productivity
-  {
-    id: 'kanban',
-    title: 'Nebula Tasks',
-    icon: Layout,
-    component: <KanbanApp />,
-    defaultWidth: 900,
-    defaultHeight: 600,
-  },
-  {
-    id: 'spreadsheet',
-    title: 'Sheets Lite',
-    icon: Grid,
-    component: <SpreadsheetApp />,
-    defaultWidth: 1000,
-    defaultHeight: 700,
-  },
-  {
-    id: 'pdf',
-    title: 'PDF Viewer',
-    icon: FileText,
-    component: <PDFViewerApp />,
-    defaultWidth: 800,
-    defaultHeight: 700,
-  },
-  {
-    id: 'stickynotes',
-    title: 'Sticky Notes',
-    icon: StickyNote,
-    component: <StickyNotesApp />,
-    defaultWidth: 350,
-    defaultHeight: 400,
-  },
-  {
-    id: 'clock',
-    title: 'Clock',
-    icon: Clock,
-    component: <ClockApp />,
-    defaultWidth: 600,
-    defaultHeight: 400,
-  },
-  
-  // Column 3 - Developer Tools
-  {
-    id: 'code',
-    title: 'Code Studio',
-    icon: Code,
-    component: <CodeEditorApp />,
-    defaultWidth: 900,
-    defaultHeight: 650,
-  },
-  {
-    id: 'colorpicker',
-    title: 'Color Picker',
-    icon: Pipette,
-    component: <ColorPickerApp />,
-    defaultWidth: 500,
-    defaultHeight: 400,
-  },
-  {
-    id: 'json',
-    title: 'JSON Formatter',
-    icon: Braces,
-    component: <JsonFormatterApp />,
-    defaultWidth: 800,
-    defaultHeight: 600,
-  },
-  {
-    id: 'regex',
-    title: 'Regex Tester',
-    icon: Regex,
-    component: <RegexTesterApp />,
-    defaultWidth: 600,
-    defaultHeight: 500,
-  },
+  // System
+  { id: 'files', title: 'File Explorer', icon: Folder, component: <FileExplorerApp />, defaultWidth: 800, defaultHeight: 550 },
+  { id: 'store', title: 'App Store', icon: ShoppingBag, component: <AppStoreApp />, defaultWidth: 900, defaultHeight: 650 },
+  { id: 'settings', title: 'Settings', icon: Settings, component: <SettingsApp />, defaultWidth: 600, defaultHeight: 500 },
+  { id: 'taskmanager', title: 'Task Manager', icon: Cpu, component: <TaskManagerApp />, defaultWidth: 500, defaultHeight: 600 },
+  { id: 'monitor', title: 'System Monitor', icon: Activity, component: <SystemMonitor />, defaultWidth: 700, defaultHeight: 500 },
+  { id: 'disk', title: 'Disk Utility', icon: HardDrive, component: <DiskUtilityApp />, defaultWidth: 600, defaultHeight: 450 },
+  { id: 'trash', title: 'Recycle Bin', icon: Trash2, component: <FileExplorerApp initialPath={['trash']} />, defaultWidth: 700, defaultHeight: 500 },
 
-  // Column 4 - Legacy & Media
-  {
-    id: 'assistant',
-    title: 'Nebula AI',
-    icon: MessageSquare,
-    component: <GeminiChat />,
-    defaultWidth: 500,
-    defaultHeight: 600,
-  },
-  {
-    id: 'notepad',
-    title: 'Notepad',
-    icon: FileText,
-    component: <Notepad />,
-    defaultWidth: 600,
-    defaultHeight: 400,
-  },
-  {
-    id: 'markdown',
-    title: 'Markdown',
-    icon: Edit3,
-    component: <MarkdownEditorApp />,
-    defaultWidth: 800,
-    defaultHeight: 600,
-  },
-  {
-    id: 'calculator',
-    title: 'Calculator',
-    icon: Calculator,
-    component: <CalculatorApp />,
-    defaultWidth: 320,
-    defaultHeight: 480,
-  },
-  {
-    id: 'paint',
-    title: 'Paint',
-    icon: Palette,
-    component: <PaintApp />,
-    defaultWidth: 800,
-    defaultHeight: 600,
-  },
-  {
-    id: 'recorder',
-    title: 'Recorder',
-    icon: Mic,
-    component: <VoiceRecorderApp />,
-    defaultWidth: 400,
-    defaultHeight: 300,
-  },
-  {
-    id: 'photo',
-    title: 'Photo Editor',
-    icon: ImageIcon,
-    component: <PhotoEditorApp />,
-    defaultWidth: 800,
-    defaultHeight: 600,
-  },
-  {
-    id: 'internet',
-    title: 'Internet',
-    icon: Globe,
-    component: <BrowserApp />,
-    defaultWidth: 1000,
-    defaultHeight: 700,
-  },
-  {
-    id: 'music',
-    title: 'Music Player',
-    icon: Music,
-    component: <MusicPlayer />,
-    defaultWidth: 400,
-    defaultHeight: 600,
-  },
-  {
-    id: 'video',
-    title: 'Video Player',
-    icon: Video,
-    component: <VideoPlayerApp />,
-    defaultWidth: 700,
-    defaultHeight: 450,
-  },
-  {
-    id: 'camera',
-    title: 'Camera',
-    icon: Camera,
-    component: <CameraApp />,
-    defaultWidth: 640,
-    defaultHeight: 520,
-  },
-  {
-    id: 'monitor',
-    title: 'System Monitor',
-    icon: Activity,
-    component: <SystemMonitor />,
-    defaultWidth: 700,
-    defaultHeight: 500,
-  },
-  {
-    id: 'trash',
-    title: 'Recycle Bin',
-    icon: Trash2,
-    component: <FileExplorerApp initialPath={['trash']} />,
-    defaultWidth: 700,
-    defaultHeight: 500,
-  },
+  // Productivity
+  { id: 'mail', title: 'Mail', icon: Mail, component: <MailApp />, defaultWidth: 900, defaultHeight: 600 },
+  { id: 'kanban', title: 'Nebula Tasks', icon: Layout, component: <KanbanApp />, defaultWidth: 900, defaultHeight: 600 },
+  { id: 'spreadsheet', title: 'Sheets', icon: Grid, component: <SpreadsheetApp />, defaultWidth: 1000, defaultHeight: 700 },
+  { id: 'notepad', title: 'Notepad', icon: FileText, component: <Notepad />, defaultWidth: 600, defaultHeight: 400 },
+  { id: 'markdown', title: 'Markdown', icon: Edit3, component: <MarkdownEditorApp />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'stickynotes', title: 'Sticky Notes', icon: StickyNote, component: <StickyNotesApp />, defaultWidth: 350, defaultHeight: 400 },
+  { id: 'clipboard', title: 'Clipboard', icon: ClipboardList, component: <ClipboardManagerApp />, defaultWidth: 350, defaultHeight: 500 },
+  { id: 'clock', title: 'Clock', icon: Clock, component: <ClockApp />, defaultWidth: 600, defaultHeight: 400 },
+  { id: 'calculator', title: 'Calculator', icon: Calculator, component: <CalculatorApp />, defaultWidth: 320, defaultHeight: 480 },
 
-  // New Apps (Features 4-20)
-  {
-    id: 'weather',
-    title: 'Weather',
-    icon: CloudSun,
-    component: <WeatherApp />,
-    defaultWidth: 400,
-    defaultHeight: 600,
-  },
-  {
-    id: 'pomodoro',
-    title: 'Pomodoro',
-    icon: Timer,
-    component: <PomodoroApp />,
-    defaultWidth: 350,
-    defaultHeight: 450,
-  },
-  {
-    id: 'minesweeper',
-    title: 'Minesweeper',
-    icon: Bomb,
-    component: <MinesweeperApp />,
-    defaultWidth: 400,
-    defaultHeight: 500,
-  },
-  {
-    id: 'memory',
-    title: 'Memory Game',
-    icon: TableProperties,
-    component: <MemoryGameApp />,
-    defaultWidth: 500,
-    defaultHeight: 550,
-  },
-  {
-    id: 'tictactoe',
-    title: 'Tic Tac Toe',
-    icon: Gamepad2,
-    component: <TicTacToe />,
-    defaultWidth: 400,
-    defaultHeight: 500,
-  },
-  {
-    id: 'unit',
-    title: 'Unit Converter',
-    icon: ArrowRightLeft,
-    component: <UnitConverterApp />,
-    defaultWidth: 400,
-    defaultHeight: 500,
-  },
-  {
-    id: 'password',
-    title: 'Password Gen',
-    icon: Key,
-    component: <PasswordGenApp />,
-    defaultWidth: 400,
-    defaultHeight: 450,
-  },
-  {
-    id: 'qrcode',
-    title: 'QR Code',
-    icon: QrCode,
-    component: <QrCodeApp />,
-    defaultWidth: 350,
-    defaultHeight: 450,
-  },
-  {
-    id: 'snake',
-    title: 'Snake',
-    icon: Ghost,
-    component: <SnakeApp />,
-    defaultWidth: 420,
-    defaultHeight: 480,
-  },
-  {
-    id: '2048',
-    title: '2048',
-    icon: Hash,
-    component: <Game2048App />,
-    defaultWidth: 400,
-    defaultHeight: 500,
-  },
-  {
-    id: 'typing',
-    title: 'Typing Test',
-    icon: Keyboard,
-    component: <TypingTestApp />,
-    defaultWidth: 600,
-    defaultHeight: 400,
-  },
-  {
-    id: 'tts',
-    title: 'Text to Speech',
-    icon: Speech,
-    component: <TTSApp />,
-    defaultWidth: 500,
-    defaultHeight: 400,
-  },
-  {
-    id: 'currency',
-    title: 'Currency',
-    icon: Coins,
-    component: <CurrencyApp />,
-    defaultWidth: 400,
-    defaultHeight: 500,
-  },
-  {
-    id: 'periodic',
-    title: 'Periodic Table',
-    icon: FlaskConical,
-    component: <PeriodicTableApp />,
-    defaultWidth: 900,
-    defaultHeight: 600,
-  },
-  {
-    id: 'whiteboard',
-    title: 'Whiteboard',
-    icon: PenTool,
-    component: <WhiteboardApp />,
-    defaultWidth: 800,
-    defaultHeight: 600,
-  },
-  {
-    id: 'diff',
-    title: 'Diff Checker',
-    icon: GitCompare,
-    component: <DiffCheckerApp />,
-    defaultWidth: 900,
-    defaultHeight: 600,
-  }
+  // Internet
+  { id: 'internet', title: 'Browser', icon: Globe, component: <BrowserApp />, defaultWidth: 1000, defaultHeight: 700 },
+  { id: 'maps', title: 'Maps', icon: Map, component: <MapsApp />, defaultWidth: 800, defaultHeight: 600 },
+
+  // Media
+  { id: 'music', title: 'Music', icon: Music, component: <MusicPlayer />, defaultWidth: 400, defaultHeight: 600 },
+  { id: 'video', title: 'Video', icon: Video, component: <VideoPlayerApp />, defaultWidth: 700, defaultHeight: 450 },
+  { id: 'meeting', title: 'Meet', icon: Phone, component: <MeetingApp />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'photo', title: 'Photo Editor', icon: ImageIcon, component: <PhotoEditorApp />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'paint', title: 'Paint', icon: Palette, component: <PaintApp />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'recorder', title: 'Recorder', icon: Mic, component: <VoiceRecorderApp />, defaultWidth: 400, defaultHeight: 300 },
+  { id: 'camera', title: 'Camera', icon: Camera, component: <CameraApp />, defaultWidth: 640, defaultHeight: 520 },
+
+  // Dev
+  { id: 'terminal', title: 'Terminal', icon: Terminal, component: <TerminalApp />, defaultWidth: 700, defaultHeight: 500 },
+  { id: 'code', title: 'Code Studio', icon: Code, component: <CodeEditorApp />, defaultWidth: 900, defaultHeight: 650 },
+  { id: 'assistant', title: 'Nebula AI', icon: MessageSquare, component: <GeminiChat />, defaultWidth: 500, defaultHeight: 600 },
+  
+  // Utilities
+  { id: 'weather', title: 'Weather', icon: CloudSun, component: <WeatherApp />, defaultWidth: 400, defaultHeight: 600 },
+  { id: 'colorpicker', title: 'Color Picker', icon: Pipette, component: <ColorPickerApp />, defaultWidth: 500, defaultHeight: 400 },
+  { id: 'unit', title: 'Converter', icon: ArrowRightLeft, component: <UnitConverterApp />, defaultWidth: 400, defaultHeight: 500 },
+  { id: 'pdf', title: 'PDF Viewer', icon: FileText, component: <PDFViewerApp />, defaultWidth: 800, defaultHeight: 700 },
+  { id: 'json', title: 'JSON Tool', icon: Braces, component: <JsonFormatterApp />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'regex', title: 'Regex', icon: Regex, component: <RegexTesterApp />, defaultWidth: 600, defaultHeight: 500 },
+  
+  // Games
+  { id: 'tictactoe', title: 'Tic Tac Toe', icon: Gamepad2, component: <TicTacToe />, defaultWidth: 400, defaultHeight: 500 },
+  { id: 'minesweeper', title: 'Minesweeper', icon: Bomb, component: <MinesweeperApp />, defaultWidth: 400, defaultHeight: 500 },
+  { id: 'memory', title: 'Memory', icon: TableProperties, component: <MemoryGameApp />, defaultWidth: 500, defaultHeight: 550 },
+  { id: 'snake', title: 'Snake', icon: Ghost, component: <SnakeApp />, defaultWidth: 420, defaultHeight: 480 },
+  { id: '2048', title: '2048', icon: Hash, component: <Game2048App />, defaultWidth: 400, defaultHeight: 500 },
+  
+  // Misc
+  { id: 'pomodoro', title: 'Pomodoro', icon: Timer, component: <PomodoroApp />, defaultWidth: 350, defaultHeight: 450 },
+  { id: 'password', title: 'Passwords', icon: Key, component: <PasswordGenApp />, defaultWidth: 400, defaultHeight: 450 },
+  { id: 'qrcode', title: 'QR Code', icon: QrCode, component: <QrCodeApp />, defaultWidth: 350, defaultHeight: 450 },
+  { id: 'typing', title: 'Typing Test', icon: Keyboard, component: <TypingTestApp />, defaultWidth: 600, defaultHeight: 400 },
+  { id: 'tts', title: 'TTS', icon: Speech, component: <TTSApp />, defaultWidth: 500, defaultHeight: 400 },
+  { id: 'currency', title: 'Currency', icon: Coins, component: <CurrencyApp />, defaultWidth: 400, defaultHeight: 500 },
+  { id: 'periodic', title: 'Periodic', icon: FlaskConical, component: <PeriodicTableApp />, defaultWidth: 900, defaultHeight: 600 },
+  { id: 'whiteboard', title: 'Whiteboard', icon: PenTool, component: <WhiteboardApp />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'diff', title: 'Diff Check', icon: GitCompare, component: <DiffCheckerApp />, defaultWidth: 900, defaultHeight: 600 },
 ];
 
 export const INITIAL_WALLPAPER = WALLPAPERS[0];

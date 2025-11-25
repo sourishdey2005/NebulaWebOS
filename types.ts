@@ -23,6 +23,7 @@ export interface WindowState {
   component: ReactNode;
   position: { x: number; y: number };
   size: { width: number; height: number };
+  isSnapped?: 'left' | 'right' | null;
 }
 
 export type Theme = 'dark' | 'light';
@@ -35,6 +36,7 @@ export interface SystemState {
   theme: Theme;
   nightShift: boolean;
   username: string;
+  accentColor: string; // New: Dynamic Theming
   powerMode: 'balanced' | 'performance' | 'saver';
   privacy: {
     location: boolean;
@@ -57,6 +59,13 @@ export interface Notification {
   read: boolean;
   source?: string; // e.g., 'System', 'Nebula AI', 'Security'
   type?: 'info' | 'success' | 'warning' | 'error';
+}
+
+export interface Toast {
+  id: string;
+  message: string;
+  type?: 'info' | 'success' | 'error';
+  duration?: number;
 }
 
 export interface FileSystemNode {
