@@ -35,7 +35,12 @@ export const Desktop: React.FC<DesktopProps> = ({
   };
 
   return (
-    <div className="absolute inset-0 p-0 w-full h-[calc(100%-48px)] overflow-hidden">
+    <div className="absolute inset-0 p-0 w-full h-[calc(100%-56px)] overflow-hidden">
+      {/* Credit Watermark */}
+      <div className="absolute bottom-6 right-6 text-white/30 text-sm font-medium select-none pointer-events-none z-0">
+        Made by Sourish Dey
+      </div>
+
       {/* Sticky Notes Layer */}
       {stickyNotes.map((note) => (
         <div 
