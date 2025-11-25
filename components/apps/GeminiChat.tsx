@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Loader2, StopCircle } from 'lucide-react';
+import { Send, Bot, User, Loader2, StopCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { streamGeminiResponse } from '../../services/geminiService';
 import { GenerateContentResponse } from '@google/genai';
@@ -161,10 +161,6 @@ export const GeminiChat: React.FC = () => {
             {isLoading ? <StopCircle size={16} /> : <Send size={16} />}
           </button>
         </form>
-        <div className="mt-2 flex items-center justify-center gap-2 text-[10px] text-gray-500">
-            <Sparkles size={10} />
-            <span>Powered by Gemini 2.5 Flash</span>
-        </div>
       </div>
     </div>
   );
