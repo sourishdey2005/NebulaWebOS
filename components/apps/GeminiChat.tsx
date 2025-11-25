@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Loader2, StopCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -36,14 +37,14 @@ export const GeminiChat: React.FC = () => {
     setIsLoading(true);
 
     // Prepare history for API
-    // Convert current messages to API history format
-    const history = messages.map(m => ({
+    // We must NOT include the new userMsg in history, as sendMessageStream sends it.
+    // We also filter out error messages to keep the context clean.
+    const history = messages
+      .filter(m => !m.isError)
+      .map(m => ({
         role: m.role,
         parts: [{ text: m.text }]
-    }));
-
-    // Add new user message to history
-    history.push({ role: 'user', parts: [{ text: userMsg.text }] });
+      }));
 
     try {
       const streamResult = await streamGeminiResponse(userMsg.text, history);
@@ -66,7 +67,7 @@ export const GeminiChat: React.FC = () => {
       setMessages(prev => [...prev, { 
         id: Date.now().toString(), 
         role: 'model', 
-        text: 'Sorry, I encountered an error connecting to the Nebula Network.', 
+        text: 'Sorry, I encountered an error connecting to the Nebula Network. Please check your network connection or API key configuration.', 
         isError: true 
       }]);
     } finally {
