@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { motion, useDragControls } from 'framer-motion';
 import { X, Minus, Square, Maximize2 } from 'lucide-react';
@@ -110,7 +111,7 @@ export const Window: React.FC<WindowProps> = ({
         top: 0, 
         left: 0,
       }}
-      className={`flex flex-col overflow-hidden bg-slate-900/80 backdrop-blur-xl border border-white/10 shadow-2xl transition-shadow duration-200 ${
+      className={`flex flex-col overflow-hidden bg-slate-900/80 backdrop-blur-xl border border-white/10 shadow-2xl transition-shadow duration-200 pointer-events-auto ${
         isActive ? 'shadow-blue-500/20 border-white/20' : ''
       }`}
     >

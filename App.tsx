@@ -355,7 +355,7 @@ function App() {
       <div className={`pointer-events-none fixed inset-0 z-[1] bg-orange-500/10 transition-opacity duration-1000 ${systemState.nightShift ? 'opacity-100' : 'opacity-0'}`} />
 
       {/* Desktop Layer */}
-      <div className="relative z-[10] w-full h-full">
+      <div className="absolute inset-0 z-[10] overflow-hidden">
         <Desktop 
             apps={visibleApps} 
             onOpenApp={handleOpenApp} 
@@ -376,8 +376,8 @@ function App() {
          </button>
       </div>
 
-      {/* Windows Layer */}
-      <div className="relative z-[20]">
+      {/* Windows Layer - Absolute positioned to overlay desktop, pointer-events-none allows clicks through to desktop */}
+      <div className="absolute inset-0 z-[20] pointer-events-none overflow-hidden">
         {windows.map((window) => {
             // Inject props
             let component = window.component;
