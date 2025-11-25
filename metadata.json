@@ -1,5 +1,7 @@
 {
   "name": "NebulaWeb OS",
   "description": "A fully functional, web-based desktop operating system interface featuring a window manager, virtual apps, system monitoring, and an integrated AI Assistant powered by Gemini.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

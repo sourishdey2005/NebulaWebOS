@@ -16,7 +16,8 @@ export const streamGeminiResponse = async (
   // We use a try-catch block to handle environments where accessing process might throw
   let apiKey = '';
   try {
-    apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) || '';
+    // Check for both API_KEY (standard) and GEMINI_API_KEY (user specified)
+    apiKey = (typeof process !== 'undefined' && process.env && (process.env.API_KEY || process.env.GEMINI_API_KEY)) || '';
   } catch (e) {
     // Suppress error if process is undefined
     console.warn("Could not access process.env");
@@ -25,7 +26,7 @@ export const streamGeminiResponse = async (
   if (!apiKey) {
     // Return a mock response or throw a clear error if key is missing
     // For the UI to handle it gracefully without crashing, we'll throw.
-    throw new Error("API Key not found. Please check your configuration.");
+    throw new Error("API Key not found. Please ensure API_KEY or GEMINI_API_KEY is set in your environment variables.");
   }
 
   try {

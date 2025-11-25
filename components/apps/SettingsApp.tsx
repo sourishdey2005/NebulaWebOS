@@ -1,7 +1,17 @@
+
 import React from 'react';
 import { User, Monitor, Wifi, Battery, Shield } from 'lucide-react';
+import { WALLPAPERS } from '../../constants';
 
-export const SettingsApp: React.FC = () => {
+interface SettingsAppProps {
+  onWallpaperChange?: (url: string) => void;
+  currentWallpaper?: string;
+}
+
+export const SettingsApp: React.FC<SettingsAppProps> = ({ 
+  onWallpaperChange,
+  currentWallpaper 
+}) => {
   const menuItems = [
     { icon: User, label: "Account" },
     { icon: Monitor, label: "Display", active: true },
@@ -23,17 +33,24 @@ export const SettingsApp: React.FC = () => {
       </div>
       
       {/* Content */}
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 overflow-y-auto">
         <h2 className="text-2xl font-semibold mb-6">Display Settings</h2>
         
         <div className="space-y-6">
             <div className="bg-slate-800/50 p-4 rounded-xl border border-white/5">
                 <label className="text-sm font-medium text-gray-300 mb-2 block">Wallpaper</label>
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                    {[1,2,3].map(i => (
-                        <div key={i} className="w-24 h-16 rounded-lg bg-gray-700 shrink-0 border-2 border-transparent hover:border-blue-500 cursor-pointer overflow-hidden">
-                             <img src={`https://picsum.photos/100/60?random=${i+10}`} className="w-full h-full object-cover opacity-80 hover:opacity-100" />
-                        </div>
+                <div className="grid grid-cols-3 gap-4">
+                    {WALLPAPERS.map((wp, i) => (
+                        <button 
+                            key={i} 
+                            onClick={() => onWallpaperChange?.(wp)}
+                            className={`
+                              relative aspect-video rounded-lg overflow-hidden border-2 transition-all
+                              ${currentWallpaper === wp ? 'border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'border-transparent hover:border-white/30'}
+                            `}
+                        >
+                             <img src={wp} className="w-full h-full object-cover" alt={`Wallpaper ${i + 1}`} />
+                        </button>
                     ))}
                 </div>
             </div>
@@ -56,7 +73,7 @@ export const SettingsApp: React.FC = () => {
             <div className="bg-slate-800/50 p-4 rounded-xl border border-white/5">
                 <label className="text-sm font-medium text-gray-300 mb-2 block">Resolution</label>
                 <select className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none">
-                    <option>Default for Display (1920 x 1080)</option>
+                    <option>Default for Display ({window.innerWidth} x {window.innerHeight})</option>
                     <option>Scaled</option>
                 </select>
             </div>

@@ -1,12 +1,14 @@
+
 import React, { useState } from 'react';
-import { APPS, INITIAL_WALLPAPER } from './constants';
-import { WindowState, SystemState } from './types';
+import { APPS, INITIAL_WALLPAPER, WALLPAPERS } from './constants';
+import { WindowState, SystemState, ContextMenuState } from './types';
 import { Desktop } from './components/Desktop';
 import { Taskbar } from './components/Taskbar';
 import { Window } from './components/Window';
 import { StartMenu } from './components/StartMenu';
 import { ControlCenter } from './components/system/ControlCenter';
 import { CalendarWidget } from './components/system/CalendarWidget';
+import { ContextMenu } from './components/system/ContextMenu';
 
 type ActivePanel = 'start' | 'control' | 'calendar' | null;
 
@@ -15,6 +17,13 @@ function App() {
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const [maxZIndex, setMaxZIndex] = useState(10);
+  const [wallpaper, setWallpaper] = useState(INITIAL_WALLPAPER);
+  
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    isOpen: false,
+    x: 0,
+    y: 0
+  });
   
   const [systemState, setSystemState] = useState<SystemState>({
     wifi: true,
@@ -100,28 +109,65 @@ function App() {
     setActivePanel(current => current === panel ? null : panel);
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({
+      isOpen: true,
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
+  const cycleWallpaper = () => {
+    const currentIndex = WALLPAPERS.indexOf(wallpaper);
+    const nextIndex = (currentIndex + 1) % WALLPAPERS.length;
+    setWallpaper(WALLPAPERS[nextIndex]);
+  };
+
   return (
     <div 
-      className="relative w-screen h-screen overflow-hidden bg-cover bg-center select-none text-sm"
-      style={{ backgroundImage: `url(${INITIAL_WALLPAPER})` }}
+      className="relative w-screen h-screen overflow-hidden bg-cover bg-center select-none text-sm transition-[background-image] duration-500 ease-in-out"
+      style={{ backgroundImage: `url(${wallpaper})` }}
+      onContextMenu={handleContextMenu}
     >
       {/* Desktop Icons */}
       <Desktop apps={APPS} onOpenApp={handleOpenApp} />
 
       {/* Windows Layer */}
-      {windows.map((window) => (
-        <Window
-          key={window.id}
-          windowState={window}
-          isActive={window.id === activeWindowId}
-          onClose={handleCloseWindow}
-          onMinimize={handleMinimizeWindow}
-          onMaximize={handleMaximizeWindow}
-          onFocus={handleFocusWindow}
-          onMove={handleMoveWindow}
-          onResize={handleResizeWindow}
-        />
-      ))}
+      {windows.map((window) => {
+        // Inject props into specific apps that need system state
+        let component = window.component;
+        
+        if (window.appId === 'settings') {
+           component = React.cloneElement(window.component as React.ReactElement<any>, {
+             onWallpaperChange: setWallpaper,
+             currentWallpaper: wallpaper
+           });
+        }
+
+        return (
+          <Window
+            key={window.id}
+            windowState={{...window, component}}
+            isActive={window.id === activeWindowId}
+            onClose={handleCloseWindow}
+            onMinimize={handleMinimizeWindow}
+            onMaximize={handleMaximizeWindow}
+            onFocus={handleFocusWindow}
+            onMove={handleMoveWindow}
+            onResize={handleResizeWindow}
+          />
+        );
+      })}
+
+      {/* Context Menu */}
+      <ContextMenu 
+        {...contextMenu}
+        onClose={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
+        onRefresh={() => window.location.reload()}
+        onChangeWallpaper={() => { cycleWallpaper(); setContextMenu(prev => ({ ...prev, isOpen: false })); }}
+        onOpenSettings={() => { handleOpenApp('settings'); setContextMenu(prev => ({ ...prev, isOpen: false })); }}
+      />
 
       {/* Taskbar */}
       <Taskbar

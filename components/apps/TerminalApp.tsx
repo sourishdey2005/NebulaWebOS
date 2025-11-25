@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 
 interface FileSystemNode {
@@ -41,7 +42,7 @@ const DEFAULT_FS: FileSystemNode = {
 
 export const TerminalApp: React.FC = () => {
   const [history, setHistory] = useState<TerminalLine[]>([
-    { type: 'output', content: 'Nebula OS Terminal [Version 1.0.0]' },
+    { type: 'output', content: 'Nebula OS Terminal [Version 1.2.0]' },
     { type: 'output', content: '(c) Nebula Corp. All rights reserved.\n' }
   ]);
   const [input, setInput] = useState('');
@@ -105,6 +106,7 @@ export const TerminalApp: React.FC = () => {
 `Available commands:
   help              Show this help message
   clear             Clear terminal screen
+  neofetch          Display system information
   ls                List directory contents
   cd [dir]          Change directory
   pwd               Print working directory
@@ -120,6 +122,23 @@ export const TerminalApp: React.FC = () => {
         setHistory([]);
         setInput('');
         return;
+
+      case 'neofetch':
+        newHistory.push({ type: 'output', content: 
+`       
+      .-------.      guest@nebula-os
+    .'         '.    ---------------
+   /   o     o   \\   OS: Nebula WebOS x64
+  |    .---.    |   Kernel: 5.15.0-web
+  |   (     )   |   Uptime: ${(performance.now() / 60000).toFixed(2)} mins
+   \\   '---'   /    Shell: bash 5.1
+    '.         .'    Resolution: ${window.innerWidth}x${window.innerHeight}
+      '-------'      Theme: Slate Dark
+                     Icons: Lucide React
+                     Browser: ${navigator.userAgent.split(' ').slice(-1)[0]}
+`
+        });
+        break;
 
       case 'pwd':
         newHistory.push({ type: 'output', content: formatPath(cwd) });

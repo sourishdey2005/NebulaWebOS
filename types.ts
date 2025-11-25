@@ -1,3 +1,4 @@
+
 import { LucideIcon } from 'lucide-react';
 import { ReactNode } from 'react';
 
@@ -32,4 +33,10 @@ export interface SystemState {
   brightness: number;
   volume: number;
   theme: Theme;
+}
+
+export interface ContextMenuState {
+  isOpen: boolean;
+  x: number;
+  y: number;
 }
