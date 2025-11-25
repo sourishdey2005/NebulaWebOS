@@ -76,12 +76,18 @@ export const DEFAULT_FS: FileSystemNode = {
         'guest': {
           type: 'dir',
           children: {
-            'projects': { type: 'dir', children: {} },
+            'projects': { 
+                type: 'dir', 
+                children: {
+                    'kanban.json': { type: 'file', content: '[]' } // Init empty kanban
+                } 
+            },
             'documents': { 
                 type: 'dir', 
                 children: {
                     'resume.txt': { type: 'file', content: 'John Doe - Developer' },
-                    'budget.csv': { type: 'file', content: 'Date,Item,Cost\n2023-01-01,Coffee,5.00' }
+                    'budget.csv': { type: 'file', content: 'Date,Item,Cost\n2023-01-01,Coffee,5.00' },
+                    'notes.txt': { type: 'file', content: 'Welcome to Nebula OS Notepad.\n\nStart typing...' } // Init notepad
                 } 
             },
             'recordings': { type: 'dir', children: {} },

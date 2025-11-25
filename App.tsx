@@ -29,6 +29,20 @@ function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isLocked, setIsLocked] = useState(true);
   
+  // System State (Now includes password)
+  const [systemState, setSystemState] = useState<SystemState>({
+    wifi: true,
+    bluetooth: true,
+    brightness: 80,
+    volume: 60,
+    theme: 'dark',
+    nightShift: false,
+    username: 'Guest User',
+    accentColor: '#3b82f6',
+    powerMode: 'balanced',
+    privacy: { location: true, camera: true, microphone: true }
+  });
+
   // New State for Features
   const [fs, setFs] = useState<FileSystemNode>(DEFAULT_FS);
   const [installedAppIds, setInstalledAppIds] = useState<string[]>([
@@ -64,6 +78,9 @@ function App() {
     const savedNotes = localStorage.getItem('nebula-notes-v1');
     if (savedNotes) try { setStickyNotes(JSON.parse(savedNotes)); } catch(e) {}
 
+    const savedSystem = localStorage.getItem('nebula-system-v1');
+    if (savedSystem) try { setSystemState(prev => ({...prev, ...JSON.parse(savedSystem)})); } catch(e) {}
+
     const savedIcons = localStorage.getItem('nebula-desktop-icons-v1');
     if (savedIcons) {
         try { setDesktopIcons(JSON.parse(savedIcons)); } catch(e) {}
@@ -86,6 +103,7 @@ function App() {
   useEffect(() => { localStorage.setItem('nebula-apps-v1', JSON.stringify(installedAppIds)); }, [installedAppIds]);
   useEffect(() => { localStorage.setItem('nebula-notes-v1', JSON.stringify(stickyNotes)); }, [stickyNotes]);
   useEffect(() => { localStorage.setItem('nebula-desktop-icons-v1', JSON.stringify(desktopIcons)); }, [desktopIcons]);
+  useEffect(() => { localStorage.setItem('nebula-system-v1', JSON.stringify(systemState)); }, [systemState]);
 
   // Screensaver Logic
   useEffect(() => {
@@ -133,19 +151,6 @@ function App() {
     const interval = setInterval(() => cycleWallpaper(), 600000);
     return () => clearInterval(interval);
   }, [wallpaper]);
-
-  const [systemState, setSystemState] = useState<SystemState>({
-    wifi: true,
-    bluetooth: true,
-    brightness: 80,
-    volume: 60,
-    theme: 'dark',
-    nightShift: false,
-    username: 'Guest User',
-    accentColor: '#3b82f6',
-    powerMode: 'balanced',
-    privacy: { location: true, camera: true, microphone: true }
-  });
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({ isOpen: false, x: 0, y: 0 });
 
@@ -226,6 +231,16 @@ function App() {
     setWallpaper(WALLPAPERS[nextIndex]);
   };
 
+  // Unlock Logic
+  const handleUnlock = (password: string) => {
+    // Only update state if we are setting it for the first time, 
+    // verification is handled in LockScreen before calling this
+    if (!systemState.password) {
+        setSystemState(prev => ({ ...prev, password }));
+    }
+    setIsLocked(false);
+  };
+
   const visibleApps = APPS.filter(app => installedAppIds.includes(app.id));
 
   const handleUpdateIconPosition = (id: string, x: number, y: number) => {
@@ -234,7 +249,13 @@ function App() {
 
   return (
     <>
-    {isLocked && <LockScreen username={systemState.username} onUnlock={() => setIsLocked(false)} />}
+    {isLocked && (
+        <LockScreen 
+            username={systemState.username} 
+            storedPassword={systemState.password} 
+            onUnlock={handleUnlock} 
+        />
+    )}
     {isScreenSaverActive && <ScreenSaver onWake={() => setIsScreenSaverActive(false)} />}
     
     <div 
@@ -259,11 +280,26 @@ function App() {
         {windows.map((window) => {
             let component = window.component;
             // Inject Props based on App ID
-            if (window.appId === 'settings') component = React.cloneElement(window.component as React.ReactElement, { onWallpaperChange: setWallpaper, currentWallpaper: wallpaper, systemState, setSystemState });
-            else if (['terminal', 'files', 'trash', 'recorder'].includes(window.appId)) component = React.cloneElement(window.component as React.ReactElement, { fs, setFs });
-            else if (window.appId === 'taskmanager') component = React.cloneElement(window.component as React.ReactElement, { windows, onCloseWindow: handleCloseWindow });
-            else if (window.appId === 'store') component = React.cloneElement(window.component as React.ReactElement, { installedApps: installedAppIds, setInstalledApps: setInstalledAppIds });
-            else if (window.appId === 'stickynotes') component = React.cloneElement(window.component as React.ReactElement, { stickyNotes, setStickyNotes });
+            // Core FS Apps
+            if (['terminal', 'files', 'trash', 'recorder', 'notepad', 'kanban'].includes(window.appId)) {
+                component = React.cloneElement(window.component as React.ReactElement, { fs, setFs });
+            }
+            // Settings
+            else if (window.appId === 'settings') {
+                component = React.cloneElement(window.component as React.ReactElement, { onWallpaperChange: setWallpaper, currentWallpaper: wallpaper, systemState, setSystemState });
+            }
+            // Task Manager
+            else if (window.appId === 'taskmanager') {
+                component = React.cloneElement(window.component as React.ReactElement, { windows, onCloseWindow: handleCloseWindow });
+            }
+            // Store
+            else if (window.appId === 'store') {
+                component = React.cloneElement(window.component as React.ReactElement, { installedApps: installedAppIds, setInstalledApps: setInstalledAppIds });
+            }
+            // Sticky Notes
+            else if (window.appId === 'stickynotes') {
+                component = React.cloneElement(window.component as React.ReactElement, { stickyNotes, setStickyNotes });
+            }
 
             return (
             <Window

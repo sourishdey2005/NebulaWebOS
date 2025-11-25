@@ -1,26 +1,66 @@
+
 import React, { useState, useEffect } from 'react';
 import { Save, File, CornerUpLeft, CheckCircle2 } from 'lucide-react';
+import { FileSystemNode } from '../../types';
 
-export const Notepad: React.FC = () => {
+interface NotepadProps {
+  fs?: FileSystemNode;
+  setFs?: React.Dispatch<React.SetStateAction<FileSystemNode>>;
+}
+
+export const Notepad: React.FC<NotepadProps> = ({ fs, setFs }) => {
   const [content, setContent] = useState('');
   const [notification, setNotification] = useState('');
+  
+  // Specific path for default notes
+  const filePath = ['home', 'guest', 'documents', 'notes.txt'];
 
-  // Load from local storage on mount
-  useEffect(() => {
-    const savedContent = localStorage.getItem('nebula-notepad-content');
-    if (savedContent !== null) {
-      setContent(savedContent);
-    } else {
-      setContent('Welcome to Nebula OS Notepad.\n\nStart typing...');
+  // Helper to get nested node
+  const getNode = (root: FileSystemNode, path: string[]) => {
+    let current = root;
+    for (const p of path) {
+        if (current.children && current.children[p]) {
+            current = current.children[p];
+        } else {
+            return null;
+        }
     }
-  }, []);
+    return current;
+  };
+
+  // Load from File System on mount
+  useEffect(() => {
+    if (fs) {
+        const node = getNode(fs, filePath);
+        if (node && node.type === 'file') {
+            setContent(node.content || '');
+        } else {
+            setContent('Welcome to Nebula OS Notepad.\n\nStart typing...');
+        }
+    }
+  }, [fs]); // Only run when fs is initially available or changes externally
 
   const handleSave = () => {
+    if (!fs || !setFs) {
+        setNotification('Error: File System unavailable');
+        return;
+    }
+
     try {
-      localStorage.setItem('nebula-notepad-content', content);
-      setNotification('Saved successfully');
+      const newFs = JSON.parse(JSON.stringify(fs));
+      // Ensure path exists - simple check for this prototype
+      if (!newFs.children.home.children.guest.children.documents) {
+         newFs.children.home.children.guest.children.documents = { type: 'dir', children: {} };
+      }
       
-      // Clear notification after 2 seconds
+      newFs.children.home.children.guest.children.documents.children['notes.txt'] = {
+          type: 'file',
+          content: content
+      };
+
+      setFs(newFs);
+      setNotification('Saved to System Disk');
+      
       setTimeout(() => {
         setNotification('');
       }, 2000);
@@ -52,7 +92,7 @@ export const Notepad: React.FC = () => {
         <button 
           onClick={handleSave}
           className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-300 hover:bg-white/10 hover:text-white rounded transition-colors focus:outline-none focus:bg-white/10"
-          title="Save to Local Storage"
+          title="Save to Virtual File System"
         >
           <Save size={14} /> Save
         </button>

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, MoreHorizontal, X, Trash2, Edit2, Check, GripVertical, Clock, AlertCircle } from 'lucide-react';
+import { FileSystemNode } from '../../types';
 
 interface Task {
   id: string;
@@ -14,6 +15,11 @@ interface Column {
   title: string;
   tasks: Task[];
   color: string; // Tailwind class for dot color
+}
+
+interface KanbanAppProps {
+  fs?: FileSystemNode;
+  setFs?: React.Dispatch<React.SetStateAction<FileSystemNode>>;
 }
 
 const DEFAULT_DATA: Column[] = [
@@ -45,7 +51,7 @@ const DEFAULT_DATA: Column[] = [
   },
 ];
 
-export const KanbanApp: React.FC = () => {
+export const KanbanApp: React.FC<KanbanAppProps> = ({ fs, setFs }) => {
   const [columns, setColumns] = useState<Column[]>(DEFAULT_DATA);
   const [draggedTask, setDraggedTask] = useState<{ taskId: string; sourceColId: string } | null>(null);
   const [editingTask, setEditingTask] = useState<{ taskId: string; colId: string } | null>(null);
@@ -55,21 +61,55 @@ export const KanbanApp: React.FC = () => {
   const editInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
 
-  // Load from LocalStorage
+  const filePath = ['home', 'guest', 'projects', 'kanban.json'];
+
+  // Load from FS
   useEffect(() => {
-    const saved = localStorage.getItem('nebula-kanban-v1');
-    if (saved) {
-      try {
-        setColumns(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load kanban data");
-      }
+    if (fs) {
+        // Helper to traverse
+        let current = fs;
+        let found = true;
+        for (const p of filePath) {
+            if (current.children && current.children[p]) {
+                current = current.children[p];
+            } else {
+                found = false;
+                break;
+            }
+        }
+        
+        if (found && current.type === 'file' && current.content) {
+            try {
+                const parsed = JSON.parse(current.content);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setColumns(parsed);
+                }
+            } catch (e) {
+                console.error("Failed to parse kanban file");
+            }
+        }
     }
   }, []);
 
-  // Save to LocalStorage
+  // Save to FS on change
   useEffect(() => {
-    localStorage.setItem('nebula-kanban-v1', JSON.stringify(columns));
+    if (fs && setFs) {
+        const timer = setTimeout(() => {
+            // Debounce save
+            const newFs = JSON.parse(JSON.stringify(fs));
+            // Ensure directory path exists
+            if (!newFs.children.home.children.guest.children.projects) {
+                newFs.children.home.children.guest.children.projects = { type: 'dir', children: {} };
+            }
+            
+            newFs.children.home.children.guest.children.projects.children['kanban.json'] = {
+                type: 'file',
+                content: JSON.stringify(columns)
+            };
+            setFs(newFs);
+        }, 500);
+        return () => clearTimeout(timer);
+    }
   }, [columns]);
 
   // Focus management

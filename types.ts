@@ -36,7 +36,8 @@ export interface SystemState {
   theme: Theme;
   nightShift: boolean;
   username: string;
-  accentColor: string; // New: Dynamic Theming
+  password?: string; // Added for persistence
+  accentColor: string;
   powerMode: 'balanced' | 'performance' | 'saver';
   privacy: {
     location: boolean;

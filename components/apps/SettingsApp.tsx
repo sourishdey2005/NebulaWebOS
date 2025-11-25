@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User, Monitor, Wifi, Battery, Shield, Check, Lock, MapPin, Camera, Mic, Signal, Smartphone, LogOut } from 'lucide-react';
+import { User, Monitor, Wifi, Battery, Shield, Check, Lock, MapPin, Camera, Mic, Signal, Smartphone, LogOut, KeyRound } from 'lucide-react';
 import { WALLPAPERS } from '../../constants';
 import { SystemState } from '../../types';
 
@@ -21,6 +21,7 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('display');
   const [tempName, setTempName] = useState(systemState?.username || 'Guest');
+  const [newPassword, setNewPassword] = useState('');
 
   // Handle undefined state gracefully
   if (!systemState || !setSystemState) return <div className="p-8 text-white">Loading Settings...</div>;
@@ -38,6 +39,16 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({
 
   const handleNameSave = () => {
     updateState('username', tempName);
+  };
+
+  const handlePasswordChange = () => {
+    if (newPassword.length < 4) {
+        alert("Password too short");
+        return;
+    }
+    updateState('password', newPassword);
+    setNewPassword('');
+    alert("Password updated successfully");
   };
 
   const menuItems: { id: Tab; icon: any; label: string }[] = [
@@ -65,7 +76,7 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({
         
         <div className="mt-auto pt-4 border-t border-white/5">
             <div className="px-3 py-2 flex items-center gap-3 text-xs text-gray-500">
-                <span>Nebula OS v1.2.0</span>
+                <span>Nebula OS v1.3.0</span>
             </div>
         </div>
       </div>
@@ -107,6 +118,29 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({
                                 className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500"
                             >
                                 Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-slate-800/50 p-6 rounded-xl border border-white/5 space-y-4">
+                    <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2"><KeyRound size={16} /> Security</h4>
+                    <div className="space-y-2">
+                        <label className="text-xs text-gray-500">Update Password</label>
+                        <div className="flex gap-2">
+                            <input 
+                                type="password" 
+                                placeholder="New Password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                className="bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50 w-64"
+                            />
+                            <button 
+                                onClick={handlePasswordChange}
+                                disabled={!newPassword}
+                                className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-500"
+                            >
+                                Update
                             </button>
                         </div>
                     </div>
