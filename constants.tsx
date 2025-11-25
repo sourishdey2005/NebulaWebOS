@@ -30,7 +30,23 @@ import {
   Code,
   Pipette,
   Braces,
-  Regex
+  Regex,
+  CloudSun,
+  Timer,
+  Bomb,
+  TableProperties,
+  ArrowRightLeft,
+  Key,
+  QrCode,
+  Ghost,
+  Hash,
+  Keyboard,
+  Speech,
+  Coins,
+  FlaskConical,
+  PenTool,
+  GitCompare,
+  Zap
 } from 'lucide-react';
 import { GeminiChat } from './components/apps/GeminiChat';
 import { Notepad } from './components/apps/Notepad';
@@ -60,6 +76,21 @@ import { CodeEditorApp } from './components/apps/CodeEditorApp';
 import { ColorPickerApp } from './components/apps/ColorPickerApp';
 import { JsonFormatterApp } from './components/apps/JsonFormatterApp';
 import { RegexTesterApp } from './components/apps/RegexTesterApp';
+import { WeatherApp } from './components/apps/WeatherApp';
+import { PomodoroApp } from './components/apps/PomodoroApp';
+import { MinesweeperApp } from './components/apps/MinesweeperApp';
+import { MemoryGameApp } from './components/apps/MemoryGameApp';
+import { UnitConverterApp } from './components/apps/UnitConverterApp';
+import { PasswordGenApp } from './components/apps/PasswordGenApp';
+import { QrCodeApp } from './components/apps/QrCodeApp';
+import { SnakeApp } from './components/apps/SnakeApp';
+import { Game2048App } from './components/apps/Game2048App';
+import { TypingTestApp } from './components/apps/TypingTestApp';
+import { TTSApp } from './components/apps/TTSApp';
+import { CurrencyApp } from './components/apps/CurrencyApp';
+import { PeriodicTableApp } from './components/apps/PeriodicTableApp';
+import { WhiteboardApp } from './components/apps/WhiteboardApp';
+import { DiffCheckerApp } from './components/apps/DiffCheckerApp';
 
 export const WALLPAPERS = [
   "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop", // Space
@@ -230,7 +261,7 @@ export const APPS: AppDefinition[] = [
   {
     id: 'regex',
     title: 'Regex Tester',
-    icon: Regex, // Fallback icon if Regex not in lucide (it is usually FileCode or generic)
+    icon: Regex,
     component: <RegexTesterApp />,
     defaultWidth: 600,
     defaultHeight: 500,
@@ -326,14 +357,6 @@ export const APPS: AppDefinition[] = [
     defaultHeight: 520,
   },
   {
-    id: 'tictactoe',
-    title: 'Tic Tac Toe',
-    icon: Gamepad2,
-    component: <TicTacToe />,
-    defaultWidth: 400,
-    defaultHeight: 500,
-  },
-  {
     id: 'monitor',
     title: 'System Monitor',
     icon: Activity,
@@ -349,6 +372,136 @@ export const APPS: AppDefinition[] = [
     defaultWidth: 700,
     defaultHeight: 500,
   },
+
+  // New Apps (Features 4-20)
+  {
+    id: 'weather',
+    title: 'Weather',
+    icon: CloudSun,
+    component: <WeatherApp />,
+    defaultWidth: 400,
+    defaultHeight: 600,
+  },
+  {
+    id: 'pomodoro',
+    title: 'Pomodoro',
+    icon: Timer,
+    component: <PomodoroApp />,
+    defaultWidth: 350,
+    defaultHeight: 450,
+  },
+  {
+    id: 'minesweeper',
+    title: 'Minesweeper',
+    icon: Bomb,
+    component: <MinesweeperApp />,
+    defaultWidth: 400,
+    defaultHeight: 500,
+  },
+  {
+    id: 'memory',
+    title: 'Memory Game',
+    icon: TableProperties,
+    component: <MemoryGameApp />,
+    defaultWidth: 500,
+    defaultHeight: 550,
+  },
+  {
+    id: 'tictactoe',
+    title: 'Tic Tac Toe',
+    icon: Gamepad2,
+    component: <TicTacToe />,
+    defaultWidth: 400,
+    defaultHeight: 500,
+  },
+  {
+    id: 'unit',
+    title: 'Unit Converter',
+    icon: ArrowRightLeft,
+    component: <UnitConverterApp />,
+    defaultWidth: 400,
+    defaultHeight: 500,
+  },
+  {
+    id: 'password',
+    title: 'Password Gen',
+    icon: Key,
+    component: <PasswordGenApp />,
+    defaultWidth: 400,
+    defaultHeight: 450,
+  },
+  {
+    id: 'qrcode',
+    title: 'QR Code',
+    icon: QrCode,
+    component: <QrCodeApp />,
+    defaultWidth: 350,
+    defaultHeight: 450,
+  },
+  {
+    id: 'snake',
+    title: 'Snake',
+    icon: Ghost,
+    component: <SnakeApp />,
+    defaultWidth: 420,
+    defaultHeight: 480,
+  },
+  {
+    id: '2048',
+    title: '2048',
+    icon: Hash,
+    component: <Game2048App />,
+    defaultWidth: 400,
+    defaultHeight: 500,
+  },
+  {
+    id: 'typing',
+    title: 'Typing Test',
+    icon: Keyboard,
+    component: <TypingTestApp />,
+    defaultWidth: 600,
+    defaultHeight: 400,
+  },
+  {
+    id: 'tts',
+    title: 'Text to Speech',
+    icon: Speech,
+    component: <TTSApp />,
+    defaultWidth: 500,
+    defaultHeight: 400,
+  },
+  {
+    id: 'currency',
+    title: 'Currency',
+    icon: Coins,
+    component: <CurrencyApp />,
+    defaultWidth: 400,
+    defaultHeight: 500,
+  },
+  {
+    id: 'periodic',
+    title: 'Periodic Table',
+    icon: FlaskConical,
+    component: <PeriodicTableApp />,
+    defaultWidth: 900,
+    defaultHeight: 600,
+  },
+  {
+    id: 'whiteboard',
+    title: 'Whiteboard',
+    icon: PenTool,
+    component: <WhiteboardApp />,
+    defaultWidth: 800,
+    defaultHeight: 600,
+  },
+  {
+    id: 'diff',
+    title: 'Diff Checker',
+    icon: GitCompare,
+    component: <DiffCheckerApp />,
+    defaultWidth: 900,
+    defaultHeight: 600,
+  }
 ];
 
 export const INITIAL_WALLPAPER = WALLPAPERS[0];

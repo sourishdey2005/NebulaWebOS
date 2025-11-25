@@ -72,3 +72,10 @@ export interface StickyNote {
   x: number;
   y: number;
 }
+
+export interface DesktopIcon {
+  id: string;
+  appId: string;
+  x: number;
+  y: number;
+}

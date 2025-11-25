@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { APPS, INITIAL_WALLPAPER, WALLPAPERS, DEFAULT_FS } from './constants';
-import { WindowState, SystemState, ContextMenuState, Notification, FileSystemNode, StickyNote } from './types';
+import { WindowState, SystemState, ContextMenuState, Notification, FileSystemNode, StickyNote, DesktopIcon } from './types';
 import { Desktop } from './components/Desktop';
 import { Taskbar } from './components/Taskbar';
 import { Window } from './components/Window';
@@ -12,6 +12,8 @@ import { ContextMenu } from './components/system/ContextMenu';
 import { NotificationCenter } from './components/system/NotificationCenter';
 import { ShieldCheck } from 'lucide-react';
 import { LockScreen } from './components/system/LockScreen';
+import { ScreenSaver } from './components/system/ScreenSaver';
+import { RunDialog } from './components/system/RunDialog';
 
 type ActivePanel = 'start' | 'control' | 'calendar' | 'notifications' | null;
 
@@ -32,9 +34,22 @@ function App() {
     'tictactoe', 'trash', 'taskmanager', 'clipboard', 
     'paint', 'recorder', 'photo', 'video', 'markdown',
     'kanban', 'spreadsheet', 'pdf', 'stickynotes', 'clock',
-    'code', 'colorpicker', 'json', 'regex'
+    'code', 'colorpicker', 'json', 'regex',
+    // New default apps
+    'weather', 'pomodoro', 'minesweeper', 'memory', 'unit', 'password', 'qrcode', 'snake', '2048', 'typing', 'tts', 'currency', 'periodic', 'whiteboard', 'diff'
   ]);
   const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]);
+  
+  // Desktop Icon Positioning
+  const [desktopIcons, setDesktopIcons] = useState<DesktopIcon[]>([]);
+  
+  // Screensaver State
+  const [idleTime, setIdleTime] = useState(0);
+  const [isScreenSaverActive, setIsScreenSaverActive] = useState(false);
+  const IDLE_THRESHOLD = 300; // 5 minutes in seconds
+
+  // Run Dialog
+  const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
 
   // Load FS from localStorage on mount
   useEffect(() => {
@@ -60,27 +75,83 @@ function App() {
             setStickyNotes(JSON.parse(savedNotes));
         } catch(e) {}
     }
+
+    // Load Desktop Icons
+    const savedIcons = localStorage.getItem('nebula-desktop-icons-v1');
+    if (savedIcons) {
+        try {
+            setDesktopIcons(JSON.parse(savedIcons));
+        } catch(e) {}
+    } else {
+        // Initialize default grid
+        const icons: DesktopIcon[] = [];
+        APPS.forEach((app, index) => {
+            icons.push({
+                id: `icon-${app.id}`,
+                appId: app.id,
+                x: 20, // Default column 1
+                y: 20 + (index * 90) // Vertical stack
+            });
+        });
+        setDesktopIcons(icons);
+    }
   }, []);
 
-  // Save FS and Apps when changed
-  useEffect(() => {
-    localStorage.setItem('nebula-fs-v1', JSON.stringify(fs));
-  }, [fs]);
+  // Save State
+  useEffect(() => { localStorage.setItem('nebula-fs-v1', JSON.stringify(fs)); }, [fs]);
+  useEffect(() => { localStorage.setItem('nebula-apps-v1', JSON.stringify(installedAppIds)); }, [installedAppIds]);
+  useEffect(() => { localStorage.setItem('nebula-notes-v1', JSON.stringify(stickyNotes)); }, [stickyNotes]);
+  useEffect(() => { localStorage.setItem('nebula-desktop-icons-v1', JSON.stringify(desktopIcons)); }, [desktopIcons]);
 
+  // Screensaver & Idle Timer Logic
   useEffect(() => {
-    localStorage.setItem('nebula-apps-v1', JSON.stringify(installedAppIds));
-  }, [installedAppIds]);
+    const timer = setInterval(() => {
+        setIdleTime(prev => {
+            if (prev >= IDLE_THRESHOLD && !isScreenSaverActive && !isLocked) {
+                setIsScreenSaverActive(true);
+            }
+            return prev + 1;
+        });
+    }, 1000);
 
+    const resetIdle = () => {
+        setIdleTime(0);
+        if (isScreenSaverActive) setIsScreenSaverActive(false);
+    };
+
+    window.addEventListener('mousemove', resetIdle);
+    window.addEventListener('keydown', resetIdle);
+    window.addEventListener('click', resetIdle);
+
+    return () => {
+        clearInterval(timer);
+        window.removeEventListener('mousemove', resetIdle);
+        window.removeEventListener('keydown', resetIdle);
+        window.removeEventListener('click', resetIdle);
+    };
+  }, [isScreenSaverActive, isLocked]);
+
+  // Keyboard Shortcuts (Run Dialog)
   useEffect(() => {
-    localStorage.setItem('nebula-notes-v1', JSON.stringify(stickyNotes));
-  }, [stickyNotes]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'r') {
+            e.preventDefault();
+            setIsRunDialogOpen(true);
+        }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    isOpen: false,
-    x: 0,
-    y: 0
-  });
-  
+  // Wallpaper Slideshow (Every 10 mins)
+  useEffect(() => {
+    const interval = setInterval(() => {
+        cycleWallpaper();
+    }, 600000);
+    return () => clearInterval(interval);
+  }, [wallpaper]);
+
+  // Night Light Automation
   const [systemState, setSystemState] = useState<SystemState>({
     wifi: true,
     bluetooth: true,
@@ -97,15 +168,29 @@ function App() {
     }
   });
 
-  // Startup Notification (only after unlock)
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 19 || hour < 6) {
+        if (!systemState.nightShift) setSystemState(prev => ({ ...prev, nightShift: true }));
+    } else {
+        if (systemState.nightShift) setSystemState(prev => ({ ...prev, nightShift: false }));
+    }
+  }, []);
+
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    isOpen: false,
+    x: 0,
+    y: 0
+  });
+
+  // Startup Notification
   useEffect(() => {
     if (!isLocked) {
-        // Add a welcome notification after a short delay
         const timer = setTimeout(() => {
             if (notifications.length === 0) {
                 addNotification({
                     title: 'Welcome to Nebula OS',
-                    message: 'System initialization complete. All systems are running normally. Explore the AI features in Nebula Chat.',
+                    message: 'System ready. Press Ctrl+R to run commands.',
                     source: 'System',
                     type: 'success'
                 });
@@ -126,11 +211,7 @@ function App() {
   };
 
   const handleOpenApp = (appId: string) => {
-    // Check if installed
-    if (!installedAppIds.includes(appId) && appId !== 'store') {
-        // If it's the Recycle Bin, we allow it even if technically not "installed" via store
-        if (appId !== 'trash') return;
-    }
+    if (!installedAppIds.includes(appId) && appId !== 'store' && appId !== 'trash') return;
 
     const app = APPS.find((a) => a.id === appId);
     if (!app) return;
@@ -155,13 +236,12 @@ function App() {
     setWindows([...windows, newWindow]);
     setActiveWindowId(instanceId);
     setMaxZIndex(newZIndex);
-    setActivePanel(null); // Close any panels when opening an app
+    setActivePanel(null);
   };
 
   const handleCloseWindow = (id: string) => {
     setWindows(prev => prev.filter((w) => w.id !== id));
     if (activeWindowId === id) {
-      // Find new top window (highest zIndex)
       setWindows(currentWindows => {
         const remaining = currentWindows.filter((w) => w.id !== id);
         if (remaining.length > 0) {
@@ -226,12 +306,46 @@ function App() {
     setWallpaper(WALLPAPERS[nextIndex]);
   };
 
-  // Filter apps for Desktop and Start Menu
   const visibleApps = APPS.filter(app => installedAppIds.includes(app.id));
+
+  // Ensure desktop icons match installed apps (basic sync)
+  useEffect(() => {
+    const newIcons = [...desktopIcons];
+    let changed = false;
+    
+    // Remove uninstalled
+    const filtered = newIcons.filter(icon => visibleApps.find(a => a.id === icon.appId));
+    if (filtered.length !== newIcons.length) {
+        newIcons.length = 0;
+        newIcons.push(...filtered);
+        changed = true;
+    }
+
+    // Add newly installed (simplified placement)
+    visibleApps.forEach((app) => {
+        if (!newIcons.find(icon => icon.appId === app.id)) {
+            newIcons.push({
+                id: `icon-${app.id}`,
+                appId: app.id,
+                x: 20 + (newIcons.length % 8) * 100,
+                y: 20 + Math.floor(newIcons.length / 8) * 100
+            });
+            changed = true;
+        }
+    });
+
+    if (changed) setDesktopIcons(newIcons);
+  }, [installedAppIds]);
+
+  const handleUpdateIconPosition = (id: string, x: number, y: number) => {
+    setDesktopIcons(prev => prev.map(icon => icon.id === id ? { ...icon, x, y } : icon));
+  };
 
   return (
     <>
     {isLocked && <LockScreen username={systemState.username} onUnlock={() => setIsLocked(false)} />}
+    {isScreenSaverActive && <ScreenSaver onWake={() => setIsScreenSaverActive(false)} />}
+    
     <div 
       className="relative w-screen h-screen overflow-hidden bg-cover bg-center select-none text-sm transition-[background-image] duration-500 ease-in-out font-sans"
       style={{ backgroundImage: `url(${wallpaper})` }}
@@ -241,33 +355,31 @@ function App() {
       <div className={`pointer-events-none fixed inset-0 z-[1] bg-orange-500/10 transition-opacity duration-1000 ${systemState.nightShift ? 'opacity-100' : 'opacity-0'}`} />
 
       {/* Desktop Layer */}
-      <div className="relative z-[10]">
+      <div className="relative z-[10] w-full h-full">
         <Desktop 
             apps={visibleApps} 
             onOpenApp={handleOpenApp} 
             stickyNotes={stickyNotes} 
             setStickyNotes={setStickyNotes}
+            desktopIcons={desktopIcons}
+            onUpdateIconPosition={handleUpdateIconPosition}
         />
       </div>
 
       {/* Floating Widgets Layer */}
       <div className="absolute right-4 top-20 z-[15] flex flex-col gap-4">
-         {/* Security Shield Widget */}
          <button 
             onClick={() => addNotification({ title: 'Security Scan Complete', message: 'No threats found. Your system is secure.', source: 'Security', type: 'success' })}
             className="w-12 h-12 rounded-full bg-blue-600/20 backdrop-blur-md border border-blue-500/30 flex items-center justify-center shadow-lg group cursor-pointer hover:bg-blue-600/30 transition-all active:scale-95"
          >
             <ShieldCheck size={24} className="text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-            <div className="absolute right-14 bg-slate-900/90 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-white/10 whitespace-nowrap">
-                System Secure
-            </div>
          </button>
       </div>
 
       {/* Windows Layer */}
       <div className="relative z-[20]">
         {windows.map((window) => {
-            // Inject props into specific apps that need system state or FS
+            // Inject props
             let component = window.component;
             
             if (window.appId === 'settings') {
@@ -315,7 +427,6 @@ function App() {
         })}
       </div>
 
-      {/* Context Menu */}
       <div className="relative z-[100]">
          <ContextMenu 
             {...contextMenu}
@@ -324,9 +435,15 @@ function App() {
             onChangeWallpaper={() => { cycleWallpaper(); setContextMenu(prev => ({ ...prev, isOpen: false })); }}
             onOpenSettings={() => { handleOpenApp('settings'); setContextMenu(prev => ({ ...prev, isOpen: false })); }}
         />
+        {isRunDialogOpen && (
+            <RunDialog 
+                isOpen={isRunDialogOpen} 
+                onClose={() => setIsRunDialogOpen(false)} 
+                onRun={handleOpenApp}
+            />
+        )}
       </div>
 
-      {/* Taskbar */}
       <Taskbar
         apps={APPS}
         openWindows={windows}
@@ -342,7 +459,6 @@ function App() {
         onFocusWindow={handleFocusWindow}
       />
 
-      {/* System Panels */}
       <StartMenu
         isOpen={activePanel === 'start'}
         apps={visibleApps}
