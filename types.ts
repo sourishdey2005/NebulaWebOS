@@ -36,7 +36,8 @@ export interface SystemState {
   theme: Theme;
   nightShift: boolean;
   username: string;
-  password?: string; // Added for persistence
+  password?: string;
+  walletAddress?: string; // Added for Blockchain Integration
   accentColor: string;
   powerMode: 'balanced' | 'performance' | 'saver';
   privacy: {

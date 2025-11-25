@@ -7,7 +7,8 @@ import {
   ClipboardList, Cpu, Palette, Mic, Video, Edit3, Layout, Grid, FileCode,
   StickyNote, Clock, Code, Pipette, Braces, Regex, CloudSun, Timer, Bomb,
   TableProperties, ArrowRightLeft, Key, QrCode, Ghost, Hash, Keyboard, Speech,
-  Coins, FlaskConical, PenTool, GitCompare, Mail, Map, HardDrive, Phone
+  Coins, FlaskConical, PenTool, GitCompare, Mail, Map, HardDrive, Phone, Wallet,
+  Shield, Cuboid
 } from 'lucide-react';
 
 import { GeminiChat } from './components/apps/GeminiChat';
@@ -53,11 +54,13 @@ import { CurrencyApp } from './components/apps/CurrencyApp';
 import { PeriodicTableApp } from './components/apps/PeriodicTableApp';
 import { WhiteboardApp } from './components/apps/WhiteboardApp';
 import { DiffCheckerApp } from './components/apps/DiffCheckerApp';
-// New Apps
 import { MailApp } from './components/apps/productivity/MailApp';
 import { MapsApp } from './components/apps/internet/MapsApp';
 import { DiskUtilityApp } from './components/apps/utilities/DiskUtilityApp';
 import { MeetingApp } from './components/apps/media/MeetingApp';
+import { WalletApp } from './components/apps/blockchain/WalletApp';
+import { CryptoVaultApp } from './components/apps/blockchain/CryptoVaultApp';
+import { ChainExplorerApp } from './components/apps/blockchain/ChainExplorerApp';
 
 export const WALLPAPERS = [
   "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop", 
@@ -79,7 +82,7 @@ export const DEFAULT_FS: FileSystemNode = {
             'projects': { 
                 type: 'dir', 
                 children: {
-                    'kanban.json': { type: 'file', content: '[]' } // Init empty kanban
+                    'kanban.json': { type: 'file', content: '[]' } 
                 } 
             },
             'documents': { 
@@ -87,7 +90,7 @@ export const DEFAULT_FS: FileSystemNode = {
                 children: {
                     'resume.txt': { type: 'file', content: 'John Doe - Developer' },
                     'budget.csv': { type: 'file', content: 'Date,Item,Cost\n2023-01-01,Coffee,5.00' },
-                    'notes.txt': { type: 'file', content: 'Welcome to Nebula OS Notepad.\n\nStart typing...' } // Init notepad
+                    'notes.txt': { type: 'file', content: 'Welcome to Nebula OS Notepad.\n\nStart typing...' } 
                 } 
             },
             'recordings': { type: 'dir', children: {} },
@@ -112,6 +115,11 @@ export const APPS: AppDefinition[] = [
   { id: 'monitor', title: 'System Monitor', icon: Activity, component: <SystemMonitor />, defaultWidth: 700, defaultHeight: 500 },
   { id: 'disk', title: 'Disk Utility', icon: HardDrive, component: <DiskUtilityApp />, defaultWidth: 600, defaultHeight: 450 },
   { id: 'trash', title: 'Recycle Bin', icon: Trash2, component: <FileExplorerApp initialPath={['trash']} />, defaultWidth: 700, defaultHeight: 500 },
+
+  // Blockchain
+  { id: 'wallet', title: 'Nebula Wallet', icon: Wallet, component: <WalletApp />, defaultWidth: 400, defaultHeight: 600 },
+  { id: 'vault', title: 'Crypto Vault', icon: Shield, component: <CryptoVaultApp />, defaultWidth: 600, defaultHeight: 500 },
+  { id: 'chain', title: 'Chain Explorer', icon: Cuboid, component: <ChainExplorerApp />, defaultWidth: 800, defaultHeight: 600 },
 
   // Productivity
   { id: 'mail', title: 'Mail', icon: Mail, component: <MailApp />, defaultWidth: 900, defaultHeight: 600 },

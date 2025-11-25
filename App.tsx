@@ -29,7 +29,7 @@ function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isLocked, setIsLocked] = useState(true);
   
-  // System State (Now includes password)
+  // System State
   const [systemState, setSystemState] = useState<SystemState>({
     wifi: true,
     bluetooth: true,
@@ -52,8 +52,7 @@ function App() {
     'paint', 'recorder', 'photo', 'video', 'markdown',
     'kanban', 'spreadsheet', 'pdf', 'stickynotes', 'clock',
     'code', 'colorpicker', 'json', 'regex',
-    // New default apps
-    'weather', 'pomodoro', 'minesweeper', 'memory', 'unit', 'password', 'qrcode', 'snake', '2048', 'typing', 'tts', 'currency', 'periodic', 'whiteboard', 'diff', 'mail', 'disk', 'meeting', 'maps'
+    'weather', 'pomodoro', 'minesweeper', 'memory', 'unit', 'password', 'qrcode', 'snake', '2048', 'typing', 'tts', 'currency', 'periodic', 'whiteboard', 'diff', 'mail', 'disk', 'meeting', 'wallet', 'vault', 'chain'
   ]);
   const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]);
   const [desktopIcons, setDesktopIcons] = useState<DesktopIcon[]>([]);
@@ -232,11 +231,14 @@ function App() {
   };
 
   // Unlock Logic
-  const handleUnlock = (password: string) => {
-    // Only update state if we are setting it for the first time, 
-    // verification is handled in LockScreen before calling this
-    if (!systemState.password) {
-        setSystemState(prev => ({ ...prev, password }));
+  const handleUnlock = (input: string, method: 'password' | 'wallet' = 'password') => {
+    if (method === 'password') {
+        if (!systemState.password) {
+            setSystemState(prev => ({ ...prev, password: input }));
+        }
+    } else if (method === 'wallet') {
+        setSystemState(prev => ({ ...prev, walletAddress: input, username: `${input.substring(0, 6)}...` }));
+        addToast(`Welcome back! Connected: ${input.substring(0, 6)}...`, 'success');
     }
     setIsLocked(false);
   };
@@ -299,6 +301,10 @@ function App() {
             // Sticky Notes
             else if (window.appId === 'stickynotes') {
                 component = React.cloneElement(window.component as React.ReactElement, { stickyNotes, setStickyNotes });
+            }
+            // Vault
+            else if (window.appId === 'vault') {
+                component = React.cloneElement(window.component as React.ReactElement, { systemState });
             }
 
             return (

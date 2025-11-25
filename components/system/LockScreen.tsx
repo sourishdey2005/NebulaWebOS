@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Lock, User, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Lock, User, ShieldCheck, Wallet, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LockScreenProps {
-  onUnlock: (password: string) => void; // Updated signature
+  onUnlock: (password: string, method?: 'password' | 'wallet') => void;
   username: string;
-  storedPassword?: string; // To check if it's first run
+  storedPassword?: string;
 }
 
 export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, username, storedPassword }) => {
@@ -15,6 +15,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, username, stor
   const [time, setTime] = useState(new Date());
   const [error, setError] = useState(false);
   const [isSetupMode, setIsSetupMode] = useState(!storedPassword);
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -34,18 +35,27 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, username, stor
             setError(true);
             return;
         }
-        // Success setup
-        onUnlock(password); // Pass new password to be saved
+        onUnlock(password, 'password');
     } else {
-        // Login mode
         if (password === storedPassword) {
-            onUnlock(password);
+            onUnlock(password, 'password');
         } else {
             setError(true);
             setTimeout(() => setError(false), 500);
             setPassword('');
         }
     }
+  };
+
+  const handleConnectWallet = () => {
+    setIsConnectingWallet(true);
+    // Simulate Web3 Handshake
+    setTimeout(() => {
+        setIsConnectingWallet(false);
+        // In a real app, this would check window.ethereum
+        const mockWalletAddress = "0x71C7...9A23";
+        onUnlock(mockWalletAddress, 'wallet');
+    }, 2000);
   };
 
   return (
@@ -61,8 +71,9 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, username, stor
         </div>
 
         <div className="flex flex-col items-center gap-6 w-full max-w-sm">
-          <div className="w-24 h-24 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center shadow-2xl">
+          <div className="w-24 h-24 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center shadow-2xl relative">
             {isSetupMode ? <ShieldCheck size={48} className="text-emerald-400" /> : <User size={48} className="text-gray-400" />}
+            <div className="absolute -bottom-2 bg-blue-600 text-[10px] px-2 py-0.5 rounded-full font-bold border border-slate-900">SECURED</div>
           </div>
           
           <h2 className="text-2xl font-semibold">
@@ -108,17 +119,29 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, username, stor
             )}
           </form>
 
+          {!isSetupMode && (
+            <div className="w-full flex flex-col items-center gap-3 mt-2">
+                <div className="flex items-center gap-2 w-full">
+                    <div className="h-px bg-white/10 flex-1" />
+                    <span className="text-xs text-gray-500 uppercase">Or</span>
+                    <div className="h-px bg-white/10 flex-1" />
+                </div>
+                <button 
+                    onClick={handleConnectWallet}
+                    disabled={isConnectingWallet}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all border border-white/10 shadow-lg disabled:opacity-70"
+                >
+                    {isConnectingWallet ? <Loader2 size={16} className="animate-spin" /> : <Wallet size={16} />}
+                    <span className="text-sm font-medium">{isConnectingWallet ? 'Connecting...' : 'Connect Wallet'}</span>
+                </button>
+            </div>
+          )}
+
           <p className="text-sm text-gray-500 mt-4 flex items-center gap-2">
             <Lock size={12} /> {isSetupMode ? "Secure your Nebula OS" : "System Locked"}
           </p>
         </div>
       </div>
-      
-      {!isSetupMode && (
-        <div className="pb-8 text-xs text-gray-500">
-            Press Enter to unlock
-        </div>
-      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FileSystemNode } from '../../types';
 
 interface TerminalLine {
-  type: 'input' | 'output' | 'error';
+  type: 'input' | 'output' | 'error' | 'success';
   content: string;
   path?: string;
 }
@@ -15,7 +15,7 @@ interface TerminalAppProps {
 
 export const TerminalApp: React.FC<TerminalAppProps> = ({ fs, setFs }) => {
   const [history, setHistory] = useState<TerminalLine[]>([
-    { type: 'output', content: 'Nebula OS Terminal [Version 1.2.0]' },
+    { type: 'output', content: 'Nebula OS Terminal [Version 1.3.2]' },
     { type: 'output', content: '(c) Nebula Corp. All rights reserved.\n' }
   ]);
   const [input, setInput] = useState('');
@@ -64,6 +64,7 @@ export const TerminalApp: React.FC<TerminalAppProps> = ({ fs, setFs }) => {
   help              Show this help message
   clear             Clear terminal screen
   neofetch          Display system information
+  nep               Nebula Package Manager
   ls                List directory contents
   cd [dir]          Change directory
   pwd               Print working directory
@@ -71,7 +72,9 @@ export const TerminalApp: React.FC<TerminalAppProps> = ({ fs, setFs }) => {
   cat [file]        Read a file
   touch [file]      Create a new file
   mkdir [dir]       Create a directory
-  whoami            Print current user` 
+  whoami            Print current user
+  encrypt [file]    Encrypt a file (Simulation)
+  decrypt [file]    Decrypt a file (Simulation)` 
         });
         break;
 
@@ -96,6 +99,51 @@ export const TerminalApp: React.FC<TerminalAppProps> = ({ fs, setFs }) => {
 `
         });
         break;
+
+      case 'nep': {
+        const sub = args[0];
+        const pkg = args[1];
+        if (sub === 'install' && pkg) {
+            newHistory.push({ type: 'output', content: `Resolving dependencies for ${pkg}...` });
+            setTimeout(() => {
+                setHistory(prev => [...prev, { type: 'success', content: `Successfully installed ${pkg} v1.0.0` }]);
+            }, 800);
+        } else if (sub === 'update') {
+            newHistory.push({ type: 'output', content: 'Updating repository lists...' });
+            setTimeout(() => {
+                setHistory(prev => [...prev, { type: 'success', content: 'All packages are up to date.' }]);
+            }, 800);
+        } else {
+            newHistory.push({ type: 'output', content: 'usage: nep [install|update] <package>' });
+        }
+        break;
+      }
+
+      case 'encrypt': {
+        const file = args[0];
+        if (!file) {
+            newHistory.push({ type: 'error', content: 'usage: encrypt [file]' });
+        } else {
+            newHistory.push({ type: 'output', content: `Encrypting ${file} with wallet signature...` });
+            setTimeout(() => {
+                setHistory(prev => [...prev, { type: 'success', content: `File ${file} encrypted. Access restricted.` }]);
+            }, 1000);
+        }
+        break;
+      }
+
+      case 'decrypt': {
+        const file = args[0];
+        if (!file) {
+            newHistory.push({ type: 'error', content: 'usage: decrypt [file]' });
+        } else {
+            newHistory.push({ type: 'output', content: `Decrypting ${file}...` });
+            setTimeout(() => {
+                setHistory(prev => [...prev, { type: 'success', content: `File ${file} decrypted.` }]);
+            }, 1000);
+        }
+        break;
+      }
 
       case 'pwd':
         newHistory.push({ type: 'output', content: formatPath(cwd) });
@@ -228,9 +276,9 @@ export const TerminalApp: React.FC<TerminalAppProps> = ({ fs, setFs }) => {
     >
       <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar" ref={scrollRef}>
         {history.map((line, i) => (
-          <div key={i} className={`${line.type === 'error' ? 'text-red-400' : line.type === 'input' ? 'text-white' : 'text-green-400'} break-words whitespace-pre-wrap`}>
+          <div key={i} className={`${line.type === 'error' ? 'text-red-400' : line.type === 'success' ? 'text-green-400' : line.type === 'input' ? 'text-white' : 'text-blue-300'} break-words whitespace-pre-wrap`}>
             {line.type === 'input' && (
-                <span className="text-blue-400 mr-2">guest@nebula:{line.path}$</span>
+                <span className="text-emerald-400 mr-2">guest@nebula:{line.path}$</span>
             )}
             {line.content}
           </div>
@@ -238,7 +286,7 @@ export const TerminalApp: React.FC<TerminalAppProps> = ({ fs, setFs }) => {
         
         {/* Active Input Line */}
         <div className="flex items-center">
-             <span className="text-blue-400 mr-2 shrink-0">guest@nebula:{formatPath(cwd)}$</span>
+             <span className="text-emerald-400 mr-2 shrink-0">guest@nebula:{formatPath(cwd)}$</span>
              <input
                 ref={inputRef}
                 type="text"
