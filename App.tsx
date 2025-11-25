@@ -39,7 +39,7 @@ function App() {
     nightShift: false,
     username: 'Guest User',
     accentColor: '#3b82f6',
-    sleepTimeout: 5, // Default 5 minutes
+    sleepTimeout: 0, // Default 0 (Never)
     powerMode: 'balanced',
     privacy: { location: true, camera: true, microphone: true }
   });

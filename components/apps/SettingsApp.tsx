@@ -55,7 +55,7 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({
     { id: 'account', icon: User, label: "Account" },
     { id: 'display', icon: Monitor, label: "Display" },
     { id: 'network', icon: Wifi, label: "Network" },
-    { id: 'power', icon: Battery, label: "Power" },
+    { id: 'power', icon: Battery, label: "Power & Sleep" },
     { id: 'privacy', icon: Shield, label: "Privacy" },
   ];
 
@@ -301,7 +301,7 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({
         {/* POWER SETTINGS */}
         {activeTab === 'power' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <h2 className="text-2xl font-semibold mb-6">Power & Battery</h2>
+                <h2 className="text-2xl font-semibold mb-6">Power & Sleep</h2>
                 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-800/50 p-6 rounded-xl border border-white/5 flex flex-col items-center justify-center gap-2">

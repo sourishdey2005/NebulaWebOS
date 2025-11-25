@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, RotateCw, Home, Search, Lock, Globe, AlertTriangle, Plus, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw, Home, Search, Lock, Globe, AlertTriangle, Plus, X, ExternalLink, Info } from 'lucide-react';
 
 interface Tab {
   id: number;
@@ -37,6 +37,7 @@ export const BrowserApp: React.FC = () => {
       }
     }
 
+    // Attempt Google workaround, though often blocked by strict CSP
     if (target.includes('google.com') && !target.includes('igu=1')) {
        target = target + (target.includes('?') ? '&igu=1' : '?igu=1');
     }
@@ -72,6 +73,12 @@ export const BrowserApp: React.FC = () => {
     if (activeTabId === id) {
         setActiveTabId(newTabs[newTabs.length - 1].id);
         setUrlInput(newTabs[newTabs.length - 1].url);
+    }
+  };
+
+  const openExternal = () => {
+    if (activeTab.url) {
+        window.open(activeTab.url, '_blank');
     }
   };
 
@@ -112,10 +119,14 @@ export const BrowserApp: React.FC = () => {
                 className="flex-1 bg-transparent text-sm text-gray-700 focus:outline-none placeholder-gray-400"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="Search Google or type a URL"
+                placeholder="Search or enter URL"
                 onFocus={(e) => e.target.select()}
             />
         </form>
+
+        <button onClick={openExternal} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-600 transition-colors" title="Open in Real Browser (Fix 'Refused to Connect')">
+            <ExternalLink size={16} />
+        </button>
       </div>
 
       {/* Content Area */}
@@ -128,6 +139,14 @@ export const BrowserApp: React.FC = () => {
 
         {activeTab.url ? (
             <>
+                {/* Info Banner for blocked sites */}
+                <div className="bg-yellow-50 border-b border-yellow-100 px-4 py-1 text-[10px] text-yellow-700 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Info size={12} />
+                        <span>If the site shows <strong>"refused to connect"</strong>, it blocks embedding. Click the <strong>External Link</strong> icon (top right) to open it.</span>
+                    </div>
+                    <button onClick={openExternal} className="font-bold hover:underline">Open External</button>
+                </div>
                 <iframe 
                     key={activeTabId} // Force remount on tab switch
                     src={activeTab.url}
@@ -143,12 +162,12 @@ export const BrowserApp: React.FC = () => {
             <div className="flex-1 flex flex-col items-center justify-center bg-white p-8">
                 <div className="w-full max-w-md space-y-8 text-center">
                     <h1 className="text-6xl font-bold text-slate-800 tracking-tighter select-none">
-                        <span className="text-blue-500">G</span>
-                        <span className="text-red-500">o</span>
-                        <span className="text-yellow-500">o</span>
-                        <span className="text-blue-500">g</span>
-                        <span className="text-green-500">l</span>
+                        <span className="text-blue-500">N</span>
                         <span className="text-red-500">e</span>
+                        <span className="text-yellow-500">b</span>
+                        <span className="text-blue-500">u</span>
+                        <span className="text-green-500">l</span>
+                        <span className="text-red-500">a</span>
                     </h1>
                     
                     <form onSubmit={(e) => { e.preventDefault(); handleNavigate(urlInput || 'google'); }} className="relative group">
@@ -166,8 +185,8 @@ export const BrowserApp: React.FC = () => {
                         {[
                             { name: 'Wikipedia', url: WIKIPEDIA_URL, icon: Globe, color: 'text-gray-600' },
                             { name: 'Bing', url: BING_SEARCH_URL, icon: Search, color: 'text-blue-600' },
-                            { name: 'Weather', url: 'https://www.bing.com/search?q=weather', icon: Globe, color: 'text-orange-500' },
-                            { name: 'News', url: 'https://www.bing.com/news', icon: Globe, color: 'text-red-500' },
+                            { name: 'Google', url: GOOGLE_SEARCH_URL, icon: Search, color: 'text-red-500' },
+                            { name: 'News', url: 'https://www.bing.com/news', icon: Globe, color: 'text-purple-500' },
                         ].map((site) => (
                             <button 
                                 key={site.name}
@@ -180,6 +199,13 @@ export const BrowserApp: React.FC = () => {
                                 <span className="text-xs text-gray-600 font-medium">{site.name}</span>
                             </button>
                         ))}
+                    </div>
+                    
+                    <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-xs text-blue-700 text-left">
+                        <div className="font-bold mb-1 flex items-center gap-1"><AlertTriangle size={12}/> Note on Embedding</div>
+                        Many modern websites (Google, YouTube, etc.) block themselves from being displayed inside an OS simulation like this (X-Frame-Options).
+                        <br/><br/>
+                        If you see a <strong>"refused to connect"</strong> error, please use the <strong>External Link</strong> icon in the top right corner.
                     </div>
                 </div>
             </div>
